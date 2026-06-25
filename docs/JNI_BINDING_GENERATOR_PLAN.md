@@ -747,6 +747,29 @@ Before committing, honestly answer:
 
 ---
 
+## References & Inspiration
+
+### Production Reference Implementation
+
+**[awake-vulkan-generator](https://github.com/ronjunevaldoz/awake/tree/vulkan/awake-vulkan-generator)**
+
+This project is inspired by a working code generator that solves the exact problem described here. The awake-vulkan-generator:
+
+- **Reads:** Kotlin data classes representing Vulkan structures (50+ of them)
+- **Generates:** C++ JNI conversion code, automatically
+- **Saves:** 200+ lines of hand-written marshalling code per engine
+- **Proves:** The pattern works in production with 3+ native bindings
+
+**Why it matters:** Rather than theorizing about whether generators help, we have a real working example. This plan generalizes from that proven pattern.
+
+### Technical References
+
+- **[JNI Specification](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/)** — Reference for correct JNI patterns and function signatures
+- **[Kotlin Reflection](https://kotlinlang.org/docs/reflection.html)** — Used in awake-vulkan-generator for runtime introspection
+- **[Gradle Plugin Development](https://docs.gradle.org/current/userguide/custom_plugins.html)** — For Phase 2 optional Gradle integration
+
+---
+
 ## Summary Table
 
 | Aspect | Details |

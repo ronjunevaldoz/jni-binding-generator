@@ -96,6 +96,22 @@ jni-binding-generator/
 | **ROI break-even** | Adding binding #4 (saves ~2 hours per new binding after initial investment) |
 | **Publishing** | Deferred to Phase 2+ (local integration first) |
 
+## Credits & Attribution
+
+This project is inspired by **[awake-vulkan-generator](https://github.com/ronjunevaldoz/awake/tree/vulkan/awake-vulkan-generator)** — a working code generator that automatically converts Kotlin/JVM bindings to C++ JNI boilerplate for the Vulkan graphics library.
+
+**Key insight:** The awake-vulkan-generator proved that this approach works in production. It solved the exact problem we're generalizing here — eliminating 200+ lines of hand-written JNI marshalling code across multiple native bindings.
+
+### How This Project Came Together
+
+This project was created with **AI assistance (Claude)** to:
+1. Analyze the patterns in awake-vulkan-generator
+2. Generalize the approach for any JNI binding
+3. Plan a reusable, open-source tool
+4. Document the architecture and decision framework
+
+**Why it matters:** Building a generator manually takes weeks of trial-and-error. With AI, we went from a working reference implementation to a generic, well-documented plan in days — proving that AI can accelerate developer tools creation.
+
 ## Contact & Feedback
 
 This project is a template ready for evaluation.  
@@ -105,4 +121,5 @@ Share feedback or questions in issues (when repo is live).
 
 **Status:** Awaiting decision to proceed or park.  
 **Owner:** Ron Valdoz  
+**Reference:** [awake-vulkan-generator](https://github.com/ronjunevaldoz/awake/tree/vulkan/awake-vulkan-generator)  
 **License:** Apache 2.0
