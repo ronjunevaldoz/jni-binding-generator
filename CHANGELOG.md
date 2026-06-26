@@ -9,6 +9,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.4] — 2026-06-26
+
+### Fixed
+- `release.yml`: release archive and asset list did not include `scripts/__init__.py`
+  (added in v1.4.3) — a user downloading a GitHub release and running `pip install`
+  would get a broken entry point. Added `__init__.py` to both the tar archive and
+  the per-file release assets. Also added `pyproject.toml` to the archive so the
+  downloaded tarball is self-contained for `pip install .`.
+- `examples/kmp-binding/iosApp/README.md`: rewrote to reference the generated
+  `.def` and `.h` files that are already present in the repo, and show the exact
+  `--ios-cinterop` command that produced them. The previous content gave generic
+  manual-creation instructions without mentioning the generator flag.
+
+---
+
 ## [1.4.3] — 2026-06-26
 
 ### Fixed

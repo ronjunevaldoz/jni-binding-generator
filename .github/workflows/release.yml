@@ -35,7 +35,9 @@ jobs:
           ARCHIVE="jni-binding-generator-${VERSION}.tar.gz"
           tar -czf "$ARCHIVE" \
             scripts/jni-binding-generator.py \
+            scripts/__init__.py \
             scripts/jni-utils.h \
+            pyproject.toml \
             README.md \
             CHANGELOG.md \
             docs/
@@ -63,4 +65,5 @@ jobs:
           files: |
             ${{ env.ARCHIVE }}
             scripts/jni-binding-generator.py
+            scripts/__init__.py
             scripts/jni-utils.h
