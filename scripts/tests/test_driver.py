@@ -260,5 +260,114 @@ class TestDiffMode(DriverTestCase):
         self.assertIn("@@", out)
 
 
+class TestVerboseMode(DriverTestCase):
+    def test_verbose_prints_class_name(self):
+        import io
+        from contextlib import redirect_stdout
+
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            rc = self.run_gen("--verbose")
+        self.assertEqual(rc, gen.EXIT_OK)
+        self.assertIn("SampleEngine", buf.getvalue())
+
+    def test_verbose_prints_function_names(self):
+        import io
+        from contextlib import redirect_stdout
+
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            self.run_gen("--verbose")
+        out = buf.getvalue()
+        self.assertIn("nativeLoad", out)
+        self.assertIn("nativeRelease", out)
+
+
+class TestPackageFilter(DriverTestCase):
+    def _write_two_packages(self):
+        (self.src / "A.kt").write_text(
+            "package com.example.a\nclass A { external fun doA(x: Int): Long }",
+            encoding="utf-8",
+        )
+        (self.src / "B.kt").write_text(
+            "package com.example.b\nclass B { external fun doB(x: Int): Long }",
+            encoding="utf-8",
+        )
+
+    def test_filter_restricts_output(self):
+        self._write_two_packages()
+        rc = gen.main(
+            [
+                "--kotlin-source",
+                str(self.src),
+                "--output",
+                str(self.out),
+                "--package-filter",
+                "com.example.a",
+            ]
+        )
+        self.assertEqual(rc, gen.EXIT_OK)
+        names = [p.name for p in self.out.glob("*.gen.cpp")]
+        self.assertTrue(any("A_jni" in n or "A" in n for n in names), names)
+        self.assertFalse(any("B" in n for n in names), names)
+
+    def test_no_filter_includes_all(self):
+        self._write_two_packages()
+        rc = gen.main(["--kotlin-source", str(self.src), "--output", str(self.out)])
+        self.assertEqual(rc, gen.EXIT_OK)
+        names = [p.name for p in self.out.glob("*.gen.cpp")]
+        self.assertGreaterEqual(len(names), 2)
+
+
+class TestIosCinterop(DriverTestCase):
+    def test_ios_cinterop_writes_def_file(self):
+        ios_out = self.root / "cinterop"
+        rc = gen.main(
+            [
+                "--kotlin-source",
+                str(self.src),
+                "--output",
+                str(self.out),
+                "--ios-cinterop",
+                str(ios_out),
+            ]
+        )
+        self.assertEqual(rc, gen.EXIT_OK)
+        def_files = list(ios_out.glob("*.def"))
+        self.assertGreater(len(def_files), 0)
+
+    def test_ios_cinterop_writes_c_header(self):
+        ios_out = self.root / "cinterop"
+        gen.main(
+            [
+                "--kotlin-source",
+                str(self.src),
+                "--output",
+                str(self.out),
+                "--ios-cinterop",
+                str(ios_out),
+            ]
+        )
+        headers = list((ios_out / "include").glob("*.h"))
+        self.assertGreater(len(headers), 0)
+
+    def test_ios_cinterop_header_contains_c_types(self):
+        ios_out = self.root / "cinterop"
+        gen.main(
+            [
+                "--kotlin-source",
+                str(self.src),
+                "--output",
+                str(self.out),
+                "--ios-cinterop",
+                str(ios_out),
+            ]
+        )
+        header_text = (ios_out / "include" / "SampleEngine.h").read_text()
+        self.assertIn("int32_t", header_text)
+        self.assertIn("int64_t", header_text)
+        self.assertIn("native_load", header_text)
+
+
 if __name__ == "__main__":
     unittest.main()

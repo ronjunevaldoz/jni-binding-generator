@@ -17,7 +17,7 @@ incremental writes, drift detection, and comprehensive docs.
 | Area | Detail |
 |---|---|
 | **Type coverage** | All Kotlin primitives, `String`, all `*Array` variants, `List<T>`, `Set<T>`, `Map<K,V>`, nested collections, enums |
-| **Tests** | 58 unit tests across 4 suites + compile-check integration test against real JDK headers |
+| **Tests** | 82 unit tests across 4 suites + compile-check integration test against real JDK headers |
 | **Docs** | [Type matrix](docs/type-support-matrix.md) · [Memory management](docs/memory-management.md) · [Unit testing](docs/unit-testing.md) · [Advanced usage](docs/advanced-usage.md) |
 | **CI / hooks** | Pre-commit: ruff lint + unit tests + drift check |
 | **Gradle** | Raw `Exec` task or typed `jniGenerator { bindings { ... } }` convention plugin |
@@ -36,22 +36,91 @@ python3 scripts/jni-binding-generator.py \
     --output examples/sample-binding/generated \
     --generate-tests
 
+# Preview what would change without writing (unified diff)
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source examples/sample-binding/SampleEngine.kt \
+    --output examples/sample-binding/generated \
+    --diff
+
+# Load custom Kotlin→JNI type mappings from a JSON file
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source src/ \
+    --output generated/ \
+    --type-map my-types.json
+
+# Filter to a specific package (e.g., in a KMP project with mixed sources)
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source shared/src/androidMain/kotlin \
+    --output androidApp/src/main/cpp/generated \
+    --package-filter com.example.myapp
+
+# Also generate a Kotlin/Native cinterop .def + C header skeleton for iOS
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source shared/src/androidMain/kotlin \
+    --output androidApp/src/main/cpp/generated \
+    --ios-cinterop iosApp/src/nativeInterop/cinterop
+
+# Show per-function generation progress
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source src/ \
+    --output generated/ \
+    --verbose
+
 # Run the test suite (unit + integration compile test)
-python3 -m unittest discover -s scripts/tests
+python3 -m pytest scripts/tests/
 
 # CI / pre-commit: verify committed output is up to date (exits non-zero on drift)
 python3 scripts/jni-binding-generator.py \
     --kotlin-source examples/sample-binding/SampleEngine.kt \
     --output examples/sample-binding/generated \
     --check
+
+# Install via pip (then use from anywhere as `jni-binding-generator`)
+pip install .
 ```
 
 Writes are incremental (unchanged files keep their mtime), and a GitHub Actions
 workflow plus a `.pre-commit-config.yaml` run the tests and a drift check.
 
+## Kotlin Multiplatform (KMP) Support
+
+The generator integrates cleanly into KMP projects. JNI is used for Android and JVM Desktop targets; iOS uses Kotlin/Native cinterop (out of scope for JNI generation).
+
+```
+shared/src/
+  androidMain/NativeBridgeJni.kt  ← external fun declarations (generator input)
+  desktopMain/NativeBridgeJni.kt  ← same for JVM Desktop
+  iosMain/NativeBridge.ios.kt     ← Kotlin/Native cinterop (not processed)
+  commonMain/NativeBridge.kt      ← expect class (not processed)
+```
+
+Wire it in `shared/build.gradle.kts`:
+
+```kotlin
+tasks.register<Exec>("generateJniAndroid") {
+    commandLine("python3", "scripts/jni-binding-generator.py",
+        "--kotlin-source", "shared/src/androidMain/kotlin",
+        "--output", "androidApp/src/main/cpp/generated")
+}
+tasks.named("preBuild") { dependsOn("generateJniAndroid") }
+```
+
+Use `--ios-cinterop DIR` to generate a `.def` + C header skeleton alongside the JNI output:
+
+```bash
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source shared/src/androidMain/kotlin \
+    --output androidApp/src/main/cpp/generated \
+    --ios-cinterop iosApp/src/nativeInterop/cinterop
+```
+
+See [`examples/kmp-binding/`](examples/kmp-binding/) for a complete working example.
+
 ## What This Is
 
 - **Python-based code generator** — Parses Kotlin external functions, emits C++ JNI stubs
+- **KMP-aware** — Works with `androidMain` and `desktopMain` source sets; `--ios-cinterop` generates `.def` skeletons
+- **pip-installable** — `pip install .` adds a `jni-binding-generator` CLI command
 - **Optional Gradle integration** — One-line task to regenerate when Kotlin interfaces change
 - **Claude agent skill** — Interactive refinement via `/jni-binding-generator` agent
 - **Generic template** — Works with any Kotlin/JNI project (not tied to a specific organization or library)
@@ -115,14 +184,23 @@ jni-binding-generator/
 │       ├── test_driver.py              # CLI driver: incremental writes, --check, --generate-tests
 │       └── test_integration.py         # Compile test against real JDK headers (all types)
 ├── examples/
-│   └── sample-binding/                 # Reference: before & after
-│       ├── SampleEngine.kt             # Input Kotlin
-│       └── generated/
-│           ├── SampleEngine_jni.gen.cpp      # Generated JNI stubs
-│           └── SampleEngine_jni_test.gen.cpp # Generated compile-time type-check
+│   ├── sample-binding/                 # Reference: single-module example
+│   │   ├── SampleEngine.kt
+│   │   └── generated/
+│   │       ├── SampleEngine_jni.gen.cpp
+│   │       └── SampleEngine_jni_test.gen.cpp
+│   └── kmp-binding/                    # Kotlin Multiplatform example
+│       ├── shared/src/
+│       │   ├── commonMain/  NativeBridge.kt         (expect class)
+│       │   ├── androidMain/ NativeBridgeJni.kt      (external fun → JNI)
+│       │   ├── iosMain/     NativeBridge.ios.kt     (Kotlin/Native cinterop stub)
+│       │   └── desktopMain/ NativeBridgeJni.kt      (external fun → JNI)
+│       ├── androidApp/src/main/cpp/generated/       (generated JNI bindings)
+│       └── desktopApp/src/jvmMain/cpp/generated/    (generated JNI bindings)
 ├── gradle-integration/                 # Run the generator from Gradle
 │   ├── README.md                       # Raw-task and convention-plugin options
 │   └── build-logic/                    # Precompiled `id("jni-generator")` plugin
+├── pyproject.toml                      # pip-installable: pip install .
 └── .gitignore
 ```
 

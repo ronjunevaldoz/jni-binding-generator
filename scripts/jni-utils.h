@@ -1594,4 +1594,106 @@ inline jobject make_list_list_float(
     return result;
 }
 
+inline std::vector<std::vector<int64_t>>
+extract_list_list_long(JNIEnv* env, jobject outerList) {
+    std::vector<std::vector<int64_t>> out;
+    if (!outerList) return out;
+    jclass listCls  = env->FindClass("java/util/List");
+    jmethodID sizeM = env->GetMethodID(listCls, "size", "()I");
+    jmethodID getM  = env->GetMethodID(listCls, "get",  "(I)Ljava/lang/Object;");
+    jint outerLen = env->CallIntMethod(outerList, sizeM);
+    out.reserve(static_cast<size_t>(outerLen));
+    for (jint i = 0; i < outerLen; ++i) {
+        jobject inner = env->CallObjectMethod(outerList, getM, i);
+        out.push_back(extract_list_long(env, inner));
+        env->DeleteLocalRef(inner);
+    }
+    env->DeleteLocalRef(listCls);
+    return out;
+}
+
+inline jobject make_list_list_long(
+        JNIEnv* env,
+        const std::vector<std::vector<int64_t>>& outer) {
+    jclass cls     = env->FindClass("java/util/ArrayList");
+    jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
+    jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
+    jobject result = env->NewObject(cls, ctor, static_cast<jint>(outer.size()));
+    for (const auto& inner : outer) {
+        jobject innerList = make_list_long(env, inner);
+        env->CallBooleanMethod(result, add, innerList);
+        env->DeleteLocalRef(innerList);
+    }
+    env->DeleteLocalRef(cls);
+    return result;
+}
+
+inline std::vector<std::vector<double>>
+extract_list_list_double(JNIEnv* env, jobject outerList) {
+    std::vector<std::vector<double>> out;
+    if (!outerList) return out;
+    jclass listCls  = env->FindClass("java/util/List");
+    jmethodID sizeM = env->GetMethodID(listCls, "size", "()I");
+    jmethodID getM  = env->GetMethodID(listCls, "get",  "(I)Ljava/lang/Object;");
+    jint outerLen = env->CallIntMethod(outerList, sizeM);
+    out.reserve(static_cast<size_t>(outerLen));
+    for (jint i = 0; i < outerLen; ++i) {
+        jobject inner = env->CallObjectMethod(outerList, getM, i);
+        out.push_back(extract_list_double(env, inner));
+        env->DeleteLocalRef(inner);
+    }
+    env->DeleteLocalRef(listCls);
+    return out;
+}
+
+inline jobject make_list_list_double(
+        JNIEnv* env,
+        const std::vector<std::vector<double>>& outer) {
+    jclass cls     = env->FindClass("java/util/ArrayList");
+    jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
+    jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
+    jobject result = env->NewObject(cls, ctor, static_cast<jint>(outer.size()));
+    for (const auto& inner : outer) {
+        jobject innerList = make_list_double(env, inner);
+        env->CallBooleanMethod(result, add, innerList);
+        env->DeleteLocalRef(innerList);
+    }
+    env->DeleteLocalRef(cls);
+    return result;
+}
+
+inline std::vector<std::vector<bool>>
+extract_list_list_bool(JNIEnv* env, jobject outerList) {
+    std::vector<std::vector<bool>> out;
+    if (!outerList) return out;
+    jclass listCls  = env->FindClass("java/util/List");
+    jmethodID sizeM = env->GetMethodID(listCls, "size", "()I");
+    jmethodID getM  = env->GetMethodID(listCls, "get",  "(I)Ljava/lang/Object;");
+    jint outerLen = env->CallIntMethod(outerList, sizeM);
+    out.reserve(static_cast<size_t>(outerLen));
+    for (jint i = 0; i < outerLen; ++i) {
+        jobject inner = env->CallObjectMethod(outerList, getM, i);
+        out.push_back(extract_list_bool(env, inner));
+        env->DeleteLocalRef(inner);
+    }
+    env->DeleteLocalRef(listCls);
+    return out;
+}
+
+inline jobject make_list_list_bool(
+        JNIEnv* env,
+        const std::vector<std::vector<bool>>& outer) {
+    jclass cls     = env->FindClass("java/util/ArrayList");
+    jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
+    jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
+    jobject result = env->NewObject(cls, ctor, static_cast<jint>(outer.size()));
+    for (const auto& inner : outer) {
+        jobject innerList = make_list_bool(env, inner);
+        env->CallBooleanMethod(result, add, innerList);
+        env->DeleteLocalRef(innerList);
+    }
+    env->DeleteLocalRef(cls);
+    return result;
+}
+
 #endif  // JNI_BINDING_GENERATOR_JNI_UTILS_H

@@ -57,7 +57,7 @@ jobs:
         run: python3 -m unittest discover -s scripts/tests -v
 
   drift:
-    name: Generated example is up to date
+    name: Generated examples are up to date
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,9 +67,23 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Check committed example matches generator output
+      - name: Check sample-binding
         run: |
           python3 scripts/jni-binding-generator.py \
             --kotlin-source examples/sample-binding/SampleEngine.kt \
             --output examples/sample-binding/generated \
+            --check
+
+      - name: Check kmp-binding androidMain
+        run: |
+          python3 scripts/jni-binding-generator.py \
+            --kotlin-source examples/kmp-binding/shared/src/androidMain/kotlin \
+            --output examples/kmp-binding/androidApp/src/main/cpp/generated \
+            --check
+
+      - name: Check kmp-binding desktopMain
+        run: |
+          python3 scripts/jni-binding-generator.py \
+            --kotlin-source examples/kmp-binding/shared/src/desktopMain/kotlin \
+            --output examples/kmp-binding/desktopApp/src/jvmMain/cpp/generated \
             --check

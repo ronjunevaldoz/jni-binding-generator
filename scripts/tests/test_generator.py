@@ -235,5 +235,37 @@ class TestNewTypeFamily(unittest.TestCase):
         self.assertIn("make_map_string_bool", out)
 
 
+class TestNestedListLongDoubleBoolean(unittest.TestCase):
+    def _gen(self, kt_type: str) -> str:
+        parsed = gen.parse_kotlin_source(
+            f"package a\nclass N {{\n    external fun f(x: {kt_type}): {kt_type}\n}}"
+        )
+        return gen.generate_file(parsed, "N.kt")
+
+    def test_list_list_long_param(self):
+        out = self._gen("List<List<Long>>")
+        self.assertIn("extract_list_list_long(env, x)", out)
+
+    def test_list_list_long_return(self):
+        out = self._gen("List<List<Long>>")
+        self.assertIn("make_list_list_long", out)
+
+    def test_list_list_double_param(self):
+        out = self._gen("List<List<Double>>")
+        self.assertIn("extract_list_list_double(env, x)", out)
+
+    def test_list_list_double_return(self):
+        out = self._gen("List<List<Double>>")
+        self.assertIn("make_list_list_double", out)
+
+    def test_list_list_bool_param(self):
+        out = self._gen("List<List<Boolean>>")
+        self.assertIn("extract_list_list_bool(env, x)", out)
+
+    def test_list_list_bool_return(self):
+        out = self._gen("List<List<Boolean>>")
+        self.assertIn("make_list_list_bool", out)
+
+
 if __name__ == "__main__":
     unittest.main()
