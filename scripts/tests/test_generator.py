@@ -274,6 +274,26 @@ class TestNewTypeFamily(unittest.TestCase):
         self.assertIn("extract_map_long_double(env, x)", out)
         self.assertIn("make_map_long_double", out)
 
+    def test_set_byte_param_and_return(self):
+        out = self._gen("Set<Byte>")
+        self.assertIn("extract_set_byte(env, x)", out)
+        self.assertIn("make_set_byte", out)
+
+    def test_set_short_param_and_return(self):
+        out = self._gen("Set<Short>")
+        self.assertIn("extract_set_short(env, x)", out)
+        self.assertIn("make_set_short", out)
+
+    def test_list_list_short_param_and_return(self):
+        out = self._gen("List<List<Short>>")
+        self.assertIn("extract_list_list_short(env, x)", out)
+        self.assertIn("make_list_list_short", out)
+
+    def test_list_list_byte_param_and_return(self):
+        out = self._gen("List<List<Byte>>")
+        self.assertIn("extract_list_list_byte(env, x)", out)
+        self.assertIn("make_list_list_byte", out)
+
 
 class TestNestedListLongDoubleBoolean(unittest.TestCase):
     def _gen(self, kt_type: str) -> str:

@@ -103,6 +103,10 @@ For return types the generated TODO body includes a comment like:
 | `Array<Float>`            | ✅ | ✅ | `jobjectArray` → `std::vector<float>` via `extract_boxed_float_array` |
 | `Array<Double>`           | ✅ | ✅ | `jobjectArray` → `std::vector<double>` via `extract_boxed_double_array` |
 | `List<List<String>>`      | ✅ | ✅ | Nested list via `extract_list_list_string` / `make_list_list_string` |
+| `List<List<Short>>`       | ✅ | ✅ | Nested list via `extract_list_list_short` / `make_list_list_short` |
+| `List<List<Byte>>`        | ✅ | ✅ | Nested list via `extract_list_list_byte` / `make_list_list_byte` |
+| `Set<Byte>`               | ✅ | ✅ | `std::unordered_set<int8_t>` via `extract_set_byte` / `make_set_byte` |
+| `Set<Short>`              | ✅ | ✅ | `std::unordered_set<int16_t>` via `extract_set_short` / `make_set_short` |
 
 ## Nullable parameters (`T?`)
 

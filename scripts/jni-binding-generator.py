@@ -169,6 +169,22 @@ TYPE_MAP = {
         "std::vector<std::vector<bool>>",
         "extract_list_list_bool({env}, {var})",
     ),
+    "List<List<Short>>": TypeInfo(
+        "jobject",
+        "std::vector<std::vector<int16_t>>",
+        "extract_list_list_short({env}, {var})",
+    ),
+    "List<List<Byte>>": TypeInfo(
+        "jobject",
+        "std::vector<std::vector<int8_t>>",
+        "extract_list_list_byte({env}, {var})",
+    ),
+    "Set<Byte>": TypeInfo(
+        "jobject", "std::unordered_set<int8_t>", "extract_set_byte({env}, {var})"
+    ),
+    "Set<Short>": TypeInfo(
+        "jobject", "std::unordered_set<int16_t>", "extract_set_short({env}, {var})"
+    ),
     # Boxed Array<T> for remaining scalar types
     "Array<Byte>": TypeInfo(
         "jobjectArray", "std::vector<int8_t>", "extract_boxed_byte_array({env}, {var})"
@@ -309,6 +325,10 @@ RETURN_MAP = {
     "List<List<Long>>": ("jobject", "nullptr"),
     "List<List<Double>>": ("jobject", "nullptr"),
     "List<List<Boolean>>": ("jobject", "nullptr"),
+    "List<List<Short>>": ("jobject", "nullptr"),
+    "List<List<Byte>>": ("jobject", "nullptr"),
+    "Set<Byte>": ("jobject", "nullptr"),
+    "Set<Short>": ("jobject", "nullptr"),
     "Set<String>": ("jobject", "nullptr"),
     "Set<Int>": ("jobject", "nullptr"),
     "Set<Long>": ("jobject", "nullptr"),
@@ -779,6 +799,10 @@ _MAKE_HELPER_MAP: dict[str, tuple[str, str]] = {
     "List<List<Long>>": ("make_list_list_long", "std::vector<std::vector<int64_t>>"),
     "List<List<Double>>": ("make_list_list_double", "std::vector<std::vector<double>>"),
     "List<List<Boolean>>": ("make_list_list_bool", "std::vector<std::vector<bool>>"),
+    "List<List<Short>>": ("make_list_list_short", "std::vector<std::vector<int16_t>>"),
+    "List<List<Byte>>": ("make_list_list_byte", "std::vector<std::vector<int8_t>>"),
+    "Set<Byte>": ("make_set_byte", "std::unordered_set<int8_t>"),
+    "Set<Short>": ("make_set_short", "std::unordered_set<int16_t>"),
     "Map<Int, Int>": ("make_map_int_int", "std::unordered_map<int32_t, int32_t>"),
     "Map<Int, Long>": ("make_map_int_long", "std::unordered_map<int32_t, int64_t>"),
     "Map<Int, Float>": ("make_map_int_float", "std::unordered_map<int32_t, float>"),

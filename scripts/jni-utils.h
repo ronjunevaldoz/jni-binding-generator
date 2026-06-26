@@ -762,6 +762,86 @@ inline jobject make_set_float(JNIEnv* env, const std::unordered_set<float>& set)
     return result;
 }
 
+inline std::unordered_set<int8_t> extract_set_byte(JNIEnv* env, jobject set) {
+    std::unordered_set<int8_t> out;
+    if (!set) return out;
+    jclass setCls  = env->FindClass("java/util/Set");
+    jclass iterCls = env->FindClass("java/util/Iterator");
+    jclass byteCls = env->FindClass("java/lang/Byte");
+    jmethodID iterM    = env->GetMethodID(setCls,  "iterator",  "()Ljava/util/Iterator;");
+    jmethodID hasNextM = env->GetMethodID(iterCls, "hasNext",   "()Z");
+    jmethodID nextM    = env->GetMethodID(iterCls, "next",      "()Ljava/lang/Object;");
+    jmethodID byteValM = env->GetMethodID(byteCls, "byteValue", "()B");
+    jobject iter = env->CallObjectMethod(set, iterM);
+    while (env->CallBooleanMethod(iter, hasNextM)) {
+        jobject elem = env->CallObjectMethod(iter, nextM);
+        out.insert(static_cast<int8_t>(env->CallByteMethod(elem, byteValM)));
+        env->DeleteLocalRef(elem);
+    }
+    env->DeleteLocalRef(iter);
+    env->DeleteLocalRef(byteCls);
+    env->DeleteLocalRef(iterCls);
+    env->DeleteLocalRef(setCls);
+    return out;
+}
+
+inline jobject make_set_byte(JNIEnv* env, const std::unordered_set<int8_t>& set) {
+    jclass setCls  = env->FindClass("java/util/HashSet");
+    jclass byteCls = env->FindClass("java/lang/Byte");
+    jmethodID ctor    = env->GetMethodID(setCls,  "<init>", "(I)V");
+    jmethodID add     = env->GetMethodID(setCls,  "add",    "(Ljava/lang/Object;)Z");
+    jmethodID valueOf = env->GetStaticMethodID(byteCls, "valueOf", "(B)Ljava/lang/Byte;");
+    jobject result = env->NewObject(setCls, ctor, static_cast<jint>(set.size()));
+    for (int8_t v : set) {
+        jobject boxed = env->CallStaticObjectMethod(byteCls, valueOf, static_cast<jbyte>(v));
+        env->CallBooleanMethod(result, add, boxed);
+        env->DeleteLocalRef(boxed);
+    }
+    env->DeleteLocalRef(byteCls);
+    env->DeleteLocalRef(setCls);
+    return result;
+}
+
+inline std::unordered_set<int16_t> extract_set_short(JNIEnv* env, jobject set) {
+    std::unordered_set<int16_t> out;
+    if (!set) return out;
+    jclass setCls   = env->FindClass("java/util/Set");
+    jclass iterCls  = env->FindClass("java/util/Iterator");
+    jclass shortCls = env->FindClass("java/lang/Short");
+    jmethodID iterM     = env->GetMethodID(setCls,   "iterator",   "()Ljava/util/Iterator;");
+    jmethodID hasNextM  = env->GetMethodID(iterCls,  "hasNext",    "()Z");
+    jmethodID nextM     = env->GetMethodID(iterCls,  "next",       "()Ljava/lang/Object;");
+    jmethodID shortValM = env->GetMethodID(shortCls, "shortValue", "()S");
+    jobject iter = env->CallObjectMethod(set, iterM);
+    while (env->CallBooleanMethod(iter, hasNextM)) {
+        jobject elem = env->CallObjectMethod(iter, nextM);
+        out.insert(static_cast<int16_t>(env->CallShortMethod(elem, shortValM)));
+        env->DeleteLocalRef(elem);
+    }
+    env->DeleteLocalRef(iter);
+    env->DeleteLocalRef(shortCls);
+    env->DeleteLocalRef(iterCls);
+    env->DeleteLocalRef(setCls);
+    return out;
+}
+
+inline jobject make_set_short(JNIEnv* env, const std::unordered_set<int16_t>& set) {
+    jclass setCls   = env->FindClass("java/util/HashSet");
+    jclass shortCls = env->FindClass("java/lang/Short");
+    jmethodID ctor    = env->GetMethodID(setCls,   "<init>", "(I)V");
+    jmethodID add     = env->GetMethodID(setCls,   "add",    "(Ljava/lang/Object;)Z");
+    jmethodID valueOf = env->GetStaticMethodID(shortCls, "valueOf", "(S)Ljava/lang/Short;");
+    jobject result = env->NewObject(setCls, ctor, static_cast<jint>(set.size()));
+    for (int16_t v : set) {
+        jobject boxed = env->CallStaticObjectMethod(shortCls, valueOf, static_cast<jshort>(v));
+        env->CallBooleanMethod(result, add, boxed);
+        env->DeleteLocalRef(boxed);
+    }
+    env->DeleteLocalRef(shortCls);
+    env->DeleteLocalRef(setCls);
+    return result;
+}
+
 // --------------------------------------------------------------------------- //
 // Map marshalling (java.util.Map <-> C++)
 // --------------------------------------------------------------------------- //
@@ -1689,6 +1769,74 @@ inline jobject make_list_list_bool(
     jobject result = env->NewObject(cls, ctor, static_cast<jint>(outer.size()));
     for (const auto& inner : outer) {
         jobject innerList = make_list_bool(env, inner);
+        env->CallBooleanMethod(result, add, innerList);
+        env->DeleteLocalRef(innerList);
+    }
+    env->DeleteLocalRef(cls);
+    return result;
+}
+
+inline std::vector<std::vector<int16_t>>
+extract_list_list_short(JNIEnv* env, jobject outerList) {
+    std::vector<std::vector<int16_t>> out;
+    if (!outerList) return out;
+    jclass listCls  = env->FindClass("java/util/List");
+    jmethodID sizeM = env->GetMethodID(listCls, "size", "()I");
+    jmethodID getM  = env->GetMethodID(listCls, "get",  "(I)Ljava/lang/Object;");
+    jint outerLen = env->CallIntMethod(outerList, sizeM);
+    out.reserve(static_cast<size_t>(outerLen));
+    for (jint i = 0; i < outerLen; ++i) {
+        jobject inner = env->CallObjectMethod(outerList, getM, i);
+        out.push_back(extract_list_short(env, inner));
+        env->DeleteLocalRef(inner);
+    }
+    env->DeleteLocalRef(listCls);
+    return out;
+}
+
+inline jobject make_list_list_short(
+        JNIEnv* env,
+        const std::vector<std::vector<int16_t>>& outer) {
+    jclass cls     = env->FindClass("java/util/ArrayList");
+    jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
+    jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
+    jobject result = env->NewObject(cls, ctor, static_cast<jint>(outer.size()));
+    for (const auto& inner : outer) {
+        jobject innerList = make_list_short(env, inner);
+        env->CallBooleanMethod(result, add, innerList);
+        env->DeleteLocalRef(innerList);
+    }
+    env->DeleteLocalRef(cls);
+    return result;
+}
+
+inline std::vector<std::vector<int8_t>>
+extract_list_list_byte(JNIEnv* env, jobject outerList) {
+    std::vector<std::vector<int8_t>> out;
+    if (!outerList) return out;
+    jclass listCls  = env->FindClass("java/util/List");
+    jmethodID sizeM = env->GetMethodID(listCls, "size", "()I");
+    jmethodID getM  = env->GetMethodID(listCls, "get",  "(I)Ljava/lang/Object;");
+    jint outerLen = env->CallIntMethod(outerList, sizeM);
+    out.reserve(static_cast<size_t>(outerLen));
+    for (jint i = 0; i < outerLen; ++i) {
+        jobject inner = env->CallObjectMethod(outerList, getM, i);
+        out.push_back(extract_list_byte(env, inner));
+        env->DeleteLocalRef(inner);
+    }
+    env->DeleteLocalRef(listCls);
+    return out;
+}
+
+inline jobject make_list_list_byte(
+        JNIEnv* env,
+        const std::vector<std::vector<int8_t>>& outer) {
+    jclass cls     = env->FindClass("java/util/ArrayList");
+    jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
+    jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
+    jobject result = env->NewObject(cls, ctor, static_cast<jint>(outer.size()));
+    for (const auto& inner : outer) {
+        jobject innerList = make_list_byte(env, inner);
         env->CallBooleanMethod(result, add, innerList);
         env->DeleteLocalRef(innerList);
     }
