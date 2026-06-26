@@ -39,14 +39,16 @@ Tests `parse_kotlin_source()`, `mangle()`, and `jni_function_name()`.
 | `TestJvmName` | `@JvmName("x")` overrides Kotlin function name; does not bleed into the next function |
 | `TestTopLevelFun` | Top-level `external fun` uses `<FilenameKt>` class; fallback to `Native` when no filename |
 | `TestMangling` | JNI name mangling: underscores → `_1`, dots → `_`, `$` → `_00024`, no-package case |
+| `TestMultiClass` | `parse_kotlin_source_multi()`: two classes in one file produce two `KotlinParsed` results, each with the correct functions and shared package |
 
 ### `test_generator.py` — C++ code generation
 
 Tests `generate_function()`, `generate_file()`, and `generate_test_file()`. Each
 test parses a minimal inline Kotlin snippet and asserts on the generated C++ string.
 
-| Test | What it pins |
+| Class / Test | What it pins |
 |---|---|
+| **`TestGeneration`** | Core generation tests (all rows below) |
 | `test_signature_and_marshalling` | Full JNI signature, `jstring2string`, `static_cast`, `extern "C" JNIEXPORT` header |
 | `test_handle_and_string_error_checks` | Null-handle guard, empty-string guard, `jbyteArray` nullable return |
 | `test_array_and_boolean_marshalling` | `extract_string_array`, `bool` cast, `jintArray` return |
@@ -113,11 +115,11 @@ created) are correctly excluded from the `DeleteLocalRef` coverage check.
 
 ### `test_integration.py` — compile check
 
-Generates a C++ binding from an inline Kotlin snippet and compiles it with the
-system C++ compiler against the real JDK `jni.h`. The fixture covers every
-supported Kotlin type: all primitive scalars, all array variants (`ByteArray`
-through `BooleanArray`), all `List<T>` / `Set<T>` / `Map<K,V>` combinations,
-nested collections, enums, nullable params, and void return.
+`TestGeneratedCompiles` generates a C++ binding from an inline Kotlin snippet and
+compiles it with the system C++ compiler against the real JDK `jni.h`. The fixture
+covers every supported Kotlin type: all primitive scalars, all array variants
+(`ByteArray` through `BooleanArray`), all `List<T>` / `Set<T>` / `Map<K,V>`
+combinations, nested collections, enums, nullable params, and void return.
 
 The test skips automatically when no compiler or no JDK headers are found, so
 it never breaks CI in minimal environments. Set `JAVA_HOME` to point the test

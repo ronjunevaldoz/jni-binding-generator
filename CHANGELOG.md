@@ -9,6 +9,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.6] — 2026-06-26
+
+### Fixed
+- `docs/unit-testing.md`: three test classes existed in code but were absent from
+  the docs — `TestMultiClass` (multi-class parse in `test_parser.py`),
+  `TestGeneration` (main generator class in `test_generator.py`), and
+  `TestGeneratedCompiles` (integration class in `test_integration.py`). All three
+  now appear with accurate descriptions.
+
+---
+
 ## [1.3.5] — 2026-06-26
 
 ### Fixed
