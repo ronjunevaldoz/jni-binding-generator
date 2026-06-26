@@ -84,6 +84,74 @@ class TestKotlinFunctionParser(unittest.TestCase):
         self.assertEqual(batch.return_type, "IntArray")
 
 
+class TestUnsupportedConstructs(unittest.TestCase):
+    def test_suspend_fun_raises(self):
+        with self.assertRaises(gen.UnknownTypeError) as ctx:
+            gen.parse_kotlin_source("package a\nclass N { external suspend fun f(x: Int): Long }")
+        self.assertIn("suspend", str(ctx.exception))
+
+    def test_extension_fun_raises(self):
+        with self.assertRaises(gen.UnknownTypeError) as ctx:
+            gen.parse_kotlin_source("package a\nclass N { external fun String.foo(): Int }")
+        self.assertIn("Extension", str(ctx.exception))
+
+    def test_vararg_raises(self):
+        with self.assertRaises(gen.UnknownTypeError) as ctx:
+            gen.parse_kotlin_source(
+                "package a\nclass N { external fun f(vararg items: String): Int }"
+            )
+        self.assertIn("vararg", str(ctx.exception))
+
+    def test_function_type_param_raises(self):
+        with self.assertRaises(gen.UnknownTypeError) as ctx:
+            gen.parse_kotlin_source(
+                "package a\nclass N { external fun f(cb: (Int) -> String): Long }"
+            )
+        self.assertIn("function-type", str(ctx.exception))
+
+
+class TestNestedClass(unittest.TestCase):
+    def test_nested_class_jni_name(self):
+        parsed = gen.parse_kotlin_source(
+            "package com.example\nclass Outer { class Inner { external fun f(x: Int): Long } }"
+        )
+        # class_name stores the Kotlin $ separator; mangle() converts it to _00024.
+        self.assertEqual(parsed.class_name, "Outer$Inner")
+        out = gen.generate_function(parsed, parsed.functions[0])
+        self.assertIn("Java_com_example_Outer_00024Inner_f", out)
+
+    def test_dollar_sign_mangled_in_jni_name(self):
+        self.assertEqual(gen.mangle("Outer$Inner"), "Outer_00024Inner")
+
+
+class TestJvmName(unittest.TestCase):
+    def test_jvm_name_overrides_kotlin_name(self):
+        parsed = gen.parse_kotlin_source(
+            'package a\nclass N {\n  @JvmName("bar")\n  external fun foo(x: Int): Long\n}'
+        )
+        self.assertEqual(parsed.functions[0].name, "bar")
+        out = gen.generate_function(parsed, parsed.functions[0])
+        self.assertIn("Java_a_N_bar(", out)
+        self.assertNotIn("Java_a_N_foo", out)
+
+
+class TestTopLevelFun(unittest.TestCase):
+    def test_top_level_uses_filename_kt(self):
+        parsed = gen.parse_kotlin_source(
+            "package com.example\nexternal fun nativeFoo(x: Int): Long",
+            filename="Utils.kt",
+        )
+        self.assertEqual(parsed.class_name, "UtilsKt")
+        self.assertTrue(parsed.is_static)
+        out = gen.generate_function(parsed, parsed.functions[0])
+        self.assertIn("Java_com_example_UtilsKt_nativeFoo", out)
+        self.assertIn("jclass clazz", out)
+
+    def test_top_level_no_filename_falls_back(self):
+        parsed = gen.parse_kotlin_source("package a\nexternal fun foo(x: Int): Long")
+        self.assertEqual(parsed.class_name, "Native")
+
+
 class TestMangling(unittest.TestCase):
     def test_basic_name(self):
         name = gen.jni_function_name("com.example.sample", "SampleEngine", "nativeLoad")

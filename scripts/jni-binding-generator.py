@@ -272,8 +272,18 @@ class ParsedFile:
 
 
 _PACKAGE_RE = re.compile(r"^\s*package\s+([\w.]+)", re.MULTILINE)
-# First top-level class or object declaration.
+# First top-level class or object declaration (captures nesting: "class Outer { class Inner").
 _DECL_RE = re.compile(r"\b(class|object)\s+(\w+)")
+# Kotlin file name for top-level funs: "foo/Bar.kt" → "BarKt"
+_FILENAME_KT_RE = re.compile(r"([A-Za-z0-9_]+)\.kt$")
+# @JvmName("altName") immediately before an external fun.
+_JVM_NAME_RE = re.compile(r'@JvmName\s*\(\s*"(\w+)"\s*\)')
+# Detect unsupported constructs that must be rejected before code-gen.
+# Both "suspend external fun" and "external suspend fun" are valid Kotlin.
+_SUSPEND_RE = re.compile(r"\b(?:suspend\s+external|external\s+suspend)\s+fun\b")
+_EXTENSION_FUN_RE = re.compile(r"\bexternal\s+fun\s+\w+\.")
+_VARARG_RE = re.compile(r"\bvararg\s+\w+\s*:")
+_FN_TYPE_RE = re.compile(r":\s*\(")  # function-type param: "cb: (Int) -> String"
 # external fun name(params): Return   — params captured non-greedily across lines.
 _EXTERNAL_FUN_RE = re.compile(
     r"external\s+fun\s+(\w+)\s*\((.*?)\)\s*"
@@ -306,6 +316,12 @@ def _split_params(raw: str) -> list[Param]:
 
 
 def _parse_one_param(chunk: str) -> Param:
+    chunk = chunk.strip()
+    if chunk.startswith("vararg "):
+        raise UnknownTypeError(
+            f"'vararg' parameters are not supported by the generator: '{chunk}'. "
+            "Collect the items on the Kotlin side and pass an Array or List instead."
+        )
     name, _, ktype = chunk.partition(":")
     name = name.strip()
     ktype = ktype.strip()
@@ -313,6 +329,11 @@ def _parse_one_param(chunk: str) -> Param:
     ktype = ktype.split("=")[0].strip()
     if not name or not ktype:
         raise ValueError(f"could not parse parameter '{chunk.strip()}'")
+    if ktype.startswith("("):
+        raise UnknownTypeError(
+            f"function-type parameters are not supported: '{name}: {ktype}'. "
+            "Use a plain interface or pass a callback handle (Long) instead."
+        )
     return Param(name=name, kotlin_type=ktype)
 
 
@@ -337,19 +358,50 @@ def _strip_comments(source: str) -> str:
     return source
 
 
-def parse_kotlin_source(source: str) -> ParsedFile:
+def parse_kotlin_source(source: str, filename: str = "") -> ParsedFile:
     """Parse a single Kotlin source string into a ParsedFile."""
     source = _strip_comments(source)
+
+    # MVP 1: reject suspend funs and extension funs up front with clear messages.
+    if _SUSPEND_RE.search(source):
+        raise UnknownTypeError(
+            "'suspend external fun' is not supported. "
+            "Expose a plain 'external fun' wrapper and call it from a coroutine dispatcher."
+        )
+    if _EXTENSION_FUN_RE.search(source):
+        raise UnknownTypeError(
+            "Extension 'external fun' (e.g. 'fun String.foo()') is not supported. "
+            "Move the function into a class or object instead."
+        )
+
     pkg_match = _PACKAGE_RE.search(source)
     package = pkg_match.group(1) if pkg_match else ""
 
-    decl_match = _DECL_RE.search(source)
-    if decl_match:
-        kind, class_name = decl_match.group(1), decl_match.group(2)
-        is_static = kind == "object"
-    else:
-        class_name = "Native"
+    # MVP 2: nested class — collect all class/object declarations in order;
+    # the JNI name for Outer.Inner is "Outer_00024Inner" ($ = _00024).
+    decl_matches = list(_DECL_RE.finditer(source))
+    if decl_matches:
+        # The outermost declaration is the first match; subsequent ones inside
+        # its body are nested. Walk all of them to build the full qualified name.
+        kinds_names = [(m.group(1), m.group(2)) for m in decl_matches]
+        # Only include class/object names, stop at the first companion object
+        # (it doesn't appear in the JNI class name).
+        parts = []
         is_static = False
+        for kind, name in kinds_names:
+            if kind == "object" and name == "Companion":
+                is_static = True
+                break
+            if kind == "object":
+                is_static = True
+            parts.append(name)
+        class_name = "$".join(parts) if len(parts) > 1 else (parts[0] if parts else "Native")
+    else:
+        # MVP 4: top-level external fun — use "<Filename>Kt" as class name,
+        # matching what the Kotlin compiler emits for top-level declarations.
+        fn_match = _FILENAME_KT_RE.search(filename)
+        class_name = (fn_match.group(1) + "Kt") if fn_match else "Native"
+        is_static = True  # top-level funs are static in the generated class
 
     # A companion object also makes the externals static even inside a class.
     if not is_static and re.search(r"companion\s+object", source):
@@ -357,7 +409,10 @@ def parse_kotlin_source(source: str) -> ParsedFile:
 
     functions: list[ExternalFunction] = []
     for m in _EXTERNAL_FUN_RE.finditer(source):
-        name = m.group(1)
+        # MVP 3: honour @JvmName if it appears in the 300 chars before "external fun".
+        lookahead = source[max(0, m.start() - 300) : m.start()]
+        jvm_name_match = _JVM_NAME_RE.search(lookahead)
+        name = jvm_name_match.group(1) if jvm_name_match else m.group(1)
         line = source.count("\n", 0, m.start()) + 1
         params = _split_params(m.group(2))
         ret = m.group(3).strip() if m.group(3) else None
@@ -372,7 +427,7 @@ def parse_kotlin_source(source: str) -> ParsedFile:
 
 
 def parse_kotlin_file(path: Path) -> ParsedFile:
-    return parse_kotlin_source(path.read_text(encoding="utf-8"))
+    return parse_kotlin_source(path.read_text(encoding="utf-8"), filename=path.name)
 
 
 # --------------------------------------------------------------------------- #
@@ -388,6 +443,8 @@ def mangle(segment: str) -> str:
             out.append("_1")
         elif ch == ".":
             out.append("_")
+        elif ch == "$":
+            out.append("_00024")
         else:
             out.append(ch)
     return "".join(out)

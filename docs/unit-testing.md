@@ -1,7 +1,8 @@
 # Unit testing guide
 
-All tests live under `scripts/tests/` and run with Python's built-in `unittest`.
-No extra dependencies are required beyond a JDK (for the compilation test).
+All tests live under `scripts/tests/` and run with Python's built-in `unittest`
+(52 tests across 4 suites). No extra dependencies are required beyond a JDK
+(for the compilation test).
 
 ## Running the tests
 
@@ -33,7 +34,11 @@ Tests `parse_kotlin_source()`, `mangle()`, and `jni_function_name()`.
 | Class | What it covers |
 |---|---|
 | `TestKotlinFunctionParser` | Package, class name, param/return parsing, nullable `?`, default values, multiline signatures, `object` → `is_static` |
-| `TestMangling` | JNI name mangling: underscores → `_1`, dots → `_`, no-package case |
+| `TestUnsupportedConstructs` | Hard errors for `suspend external fun`, extension receivers, `vararg`, function-type params |
+| `TestNestedClass` | `Outer$Inner` class name; `$` → `_00024` in generated JNI symbol |
+| `TestJvmName` | `@JvmName("x")` overrides Kotlin function name in generated output |
+| `TestTopLevelFun` | Top-level `external fun` uses `<FilenameKt>` class; fallback to `Native` when no filename |
+| `TestMangling` | JNI name mangling: underscores → `_1`, dots → `_`, `$` → `_00024`, no-package case |
 
 ### `test_generator.py` — C++ code generation
 
