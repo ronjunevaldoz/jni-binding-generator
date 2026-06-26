@@ -9,6 +9,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.1] — 2026-06-26
+
+### Fixed
+- **`@JvmName` on consecutive functions** — when two adjacent `external fun`
+  declarations both carried `@JvmName`, the second function's annotation was
+  discarded and it kept its Kotlin name. Fixed the parser to walk all `@JvmName`
+  candidates in the look-behind window and accept the last one that has no
+  `external fun` between it and the current function.
+- Added regression test `test_jvm_name_on_consecutive_functions`.
+
+### Changed
+- Test count: 144 → 145
+
+---
+
 ## [1.3.0] — 2026-06-26
 
 ### Fixed

@@ -134,6 +134,20 @@ class TestJvmName(unittest.TestCase):
         self.assertIn("Java_a_N_bar(", out)
         self.assertNotIn("Java_a_N_foo", out)
 
+    def test_jvm_name_on_consecutive_functions(self):
+        # Both functions have their own @JvmName — each must be renamed independently.
+        parsed = gen.parse_kotlin_source(
+            'package a\nclass N {\n'
+            '  @JvmName("alpha")\n'
+            '  external fun first(x: Int): Long\n'
+            '  @JvmName("beta")\n'
+            '  external fun second(y: Int): Long\n'
+            '}'
+        )
+        self.assertEqual(len(parsed.functions), 2)
+        self.assertEqual(parsed.functions[0].name, "alpha")
+        self.assertEqual(parsed.functions[1].name, "beta")
+
     def test_jvm_name_does_not_bleed_to_next_function(self):
         # @JvmName on one function must not rename the function that follows it.
         parsed = gen.parse_kotlin_source(
