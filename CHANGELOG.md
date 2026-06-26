@@ -9,6 +9,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.0] — 2026-06-26
+
+### Fixed
+- **Python version requirement** — `pyproject.toml` claimed `requires-python = ">=3.9"`
+  but the generator uses `X | Y` union type syntax in dataclass fields and function
+  annotations, which requires Python 3.10+. Python 3.9 reached EOL in October 2025.
+  Updated to `>=3.10` and removed the `Python :: 3.9` classifier.
+- `README.md`: "Python 3.9+" in the Quick Facts table updated to "Python 3.10+".
+- `.github/workflows/ci.yml`: test matrix now covers both Python 3.10 and 3.12 across
+  all three OSes (6 jobs) so the declared minimum version is actually exercised in CI.
+
+---
+
 ## [1.3.9] — 2026-06-26
 
 ### Fixed

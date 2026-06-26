@@ -220,7 +220,7 @@ jni-binding-generator/
 
 | Aspect | Detail |
 |---|---|
-| **Language** | Python 3.9+ (generator) · C++ header-only helpers · optional Kotlin (Gradle DSL) |
+| **Language** | Python 3.10+ (generator) · C++ header-only helpers · optional Kotlin (Gradle DSL) |
 | **Dependencies** | None at runtime — stdlib only; `ruff` for linting; `pre-commit` for hooks |
 | **ROI break-even** | ~4th binding (saves ~2 hrs of hand-written boilerplate per new binding) |
 | **Original plan** | [PLAN.md](docs/JNI_BINDING_GENERATOR_PLAN.md) — phases 0–3 and decision framework |
