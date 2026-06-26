@@ -9,6 +9,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.1] — 2026-06-26
+
+### Fixed
+- `ruff.toml`: `target-version = "py39"` was inconsistent with the `>=3.10`
+  minimum set in [1.4.0]. Updated to `"py310"` so `pyupgrade` and other
+  version-aware rules target the correct baseline.
+
+---
+
 ## [1.4.0] — 2026-06-26
 
 ### Fixed
