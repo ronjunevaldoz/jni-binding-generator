@@ -8,8 +8,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
-- `Map<Long, Int/Long/String/Float/Boolean>` type family — 5 new Kotlin types mapping to
+- `Map<Long, Int/Long/String/Float/Double/Boolean>` type family — 6 new Kotlin types mapping to
   `std::unordered_map<int64_t, *>` with `extract_map_long_*` / `make_map_long_*` helpers
+- `Map<String, Double>` and `Map<Int, Double>` — Double value now covered for all key types
 - `scripts/tests/test_memory.py` — 17 static-analysis tests (612 subtests) verifying that
   every JNI local-reference acquisition in `jni-utils.h` has a matching release (EP-6,
   `FindClass`/`DeleteLocalRef` balance, iterator-loop cleanup, boxed object release)

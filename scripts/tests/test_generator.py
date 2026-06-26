@@ -259,6 +259,21 @@ class TestNewTypeFamily(unittest.TestCase):
         self.assertIn("extract_map_long_bool(env, x)", out)
         self.assertIn("make_map_long_bool", out)
 
+    def test_map_string_double_param_and_return(self):
+        out = self._gen("Map<String, Double>")
+        self.assertIn("extract_map_string_double(env, x)", out)
+        self.assertIn("make_map_string_double", out)
+
+    def test_map_int_double_param_and_return(self):
+        out = self._gen("Map<Int, Double>")
+        self.assertIn("extract_map_int_double(env, x)", out)
+        self.assertIn("make_map_int_double", out)
+
+    def test_map_long_double_param_and_return(self):
+        out = self._gen("Map<Long, Double>")
+        self.assertIn("extract_map_long_double(env, x)", out)
+        self.assertIn("make_map_long_double", out)
+
 
 class TestNestedListLongDoubleBoolean(unittest.TestCase):
     def _gen(self, kt_type: str) -> str:
