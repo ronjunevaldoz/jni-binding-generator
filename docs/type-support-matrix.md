@@ -156,8 +156,11 @@ All supported types accept a `?` suffix. The effect:
 
 1. Add a `TypeInfo` entry to `TYPE_MAP` in `jni-binding-generator.py`
 2. Add a matching entry to `RETURN_MAP`
-3. Add a helper to `jni-utils.h` (`extract_*` for params, `make_*` for returns)
-4. If the helper calls JNI APIs (anything other than a pure C cast), it already
-   gets an `env->ExceptionCheck()` guard from `_needs_exception_check` — no
-   extra work needed for strings/vectors/maps
-5. Update this file
+3. Add `extract_*` (param) and/or `make_*` (return) helpers to `jni-utils.h`
+4. Add a `_MAKE_HELPER_MAP` entry pointing to the new `make_*` helper
+5. Write a test in `scripts/tests/test_generator.py`
+6. Update this file
+
+If the helper calls JNI APIs (anything other than a pure C cast), it already
+gets an `env->ExceptionCheck()` guard from `_needs_exception_check` — no
+extra work needed for strings/vectors/maps.

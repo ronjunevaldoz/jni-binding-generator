@@ -112,6 +112,7 @@ at CI time. It checks:
 | `TestExtractMakeHelpersHaveCleanup` | Every `extract_*/make_*` that creates local refs has a `DeleteLocalRef` |
 | `TestNestedListHelpers` | All 16 `extract/make_list_list_*` helpers release inner-list refs and class refs |
 | `TestBoxedArrayHelpers` | `extract_boxed_*_array` helpers delete each element ref and the class ref |
+| `TestHeaderPresent` | Smoke test: `jni-utils.h` exists, is non-empty, and exposes >20 `extract_*/make_*` helpers |
 
 Helpers that use `Get*ArrayRegion` (primitive arrays copied into a C buffer without creating
 local refs) are correctly excluded from the `DeleteLocalRef` coverage check.

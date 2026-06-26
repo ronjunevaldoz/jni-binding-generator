@@ -46,11 +46,12 @@ ruff format --check scripts/
 
 ## Adding a New Type
 
-1. Add the Kotlin type to `TYPE_MAP` in `jni-binding-generator.py`
-2. Add a return entry to `RETURN_MAP`
-3. Add a `_MAKE_HELPER_MAP` entry if a `make_*` helper exists in `jni-utils.h`
-4. Write a test in `scripts/tests/test_generator.py`
-5. Update `docs/type-support-matrix.md`
+1. Add a `TypeInfo` entry to `TYPE_MAP` in `jni-binding-generator.py`
+2. Add a matching return entry to `RETURN_MAP`
+3. Add `extract_*` (param) and/or `make_*` (return) helpers to `scripts/jni-utils.h`
+4. Add a `_MAKE_HELPER_MAP` entry pointing to the new `make_*` helper
+5. Write a test in `scripts/tests/test_generator.py`
+6. Update `docs/type-support-matrix.md`
 
 ## Code Style
 

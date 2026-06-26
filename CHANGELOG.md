@@ -9,6 +9,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.5] — 2026-06-26
+
+### Fixed
+- `docs/memory-management.md`: `TestHeaderPresent` (smoke test verifying
+  `jni-utils.h` exists, is non-empty, and exposes >20 helpers) was present in
+  `test_memory.py` but absent from the automated-tests table. Added.
+- `CONTRIBUTING.md` / `docs/type-support-matrix.md`: the two "Adding a new type"
+  checklists were inconsistent — one mentioned `jni-utils.h` helpers but not tests;
+  the other mentioned tests but not helpers. Both now list all 6 steps:
+  `TYPE_MAP` → `RETURN_MAP` → `jni-utils.h` helpers → `_MAKE_HELPER_MAP` →
+  test → `type-support-matrix.md`.
+
+---
+
 ## [1.4.4] — 2026-06-26
 
 ### Fixed
