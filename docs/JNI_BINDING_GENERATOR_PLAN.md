@@ -8,7 +8,7 @@
 
 **Proposal:** Build a code generator to automate JNI boilerplate for native C++ libraries bound via JNI (e.g., inference engines, image processing, audio codecs, or any structured C++ API with 3+ bindings).
 
-**Status:** Planning phase — awaiting decision to proceed or park.
+**Status:** Phase 1 (Python generator) implemented and tested. The generator parses Kotlin `external fun` declarations and emits C++ JNI stubs that compile against the JDK's JNI headers. See [`scripts/jni-binding-generator.py`](../scripts/jni-binding-generator.py) and the worked example in [`examples/sample-binding/`](../examples/sample-binding/). Phases 2–3 (Gradle integration, hardening) remain optional/future work.
 
 **Estimated effort:** 3–4 weeks (agent skill + Python script + Gradle integration).
 
@@ -225,9 +225,19 @@ if (config_path_str.empty()) {
 
 ---
 
-### Phase 1: Python Script Implementation (Week 2)
+### Phase 1: Python Script Implementation (Week 2) — ✅ IMPLEMENTED
 
 **Goal:** Convert agent-generated patterns into a production Python script.
+
+**Status:** Done. Implemented in [`scripts/jni-binding-generator.py`](../scripts/jni-binding-generator.py) with:
+- `KotlinFunctionParser` — comment-stripped regex parse of `external fun` signatures (package, class/object, params, return type, nullability, default values, generics like `Array<String>`).
+- `TypeMapper` — `TYPE_MAP` / `RETURN_MAP` tables with actionable errors for unmapped types.
+- `CppJniStubGenerator` — emits full `extern "C"` JNI entry points with JNI short-name mangling, argument marshalling, handle/string error checks, and a TODO body.
+- C++ helpers in [`scripts/jni-utils.h`](../scripts/jni-utils.h) (`jstring2string`, `extract_*_array`, `throw_illegal_*`).
+- 16 unit tests in [`scripts/tests/`](../scripts/tests/) (`python3 -m unittest discover -s scripts/tests`).
+- Verified: generated output compiles against JDK 17 JNI headers via `clang++ -fsyntax-only`.
+
+**Original task breakdown (for reference):**
 
 **Tasks:**
 

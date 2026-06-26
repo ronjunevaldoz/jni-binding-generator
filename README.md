@@ -10,9 +10,24 @@ Automate boilerplate code generation for JNI (Java Native Interface) bindings fr
 
 ## Status
 
-📋 **Planning phase** — Project plan ready for review and decision.
+✅ **Phase 1 implemented** — the Python generator parses Kotlin `external fun`
+declarations and emits compiling C++ JNI stubs. A worked example lives in
+[`examples/sample-binding/`](examples/sample-binding/), and the generated output
+is verified to compile against the JDK's JNI headers.
 
-See [PLAN.md](docs/JNI_BINDING_GENERATOR_PLAN.md) for full details.
+See [PLAN.md](docs/JNI_BINDING_GENERATOR_PLAN.md) for the full roadmap (Phases 0–3).
+
+## Try It
+
+```bash
+# Generate C++ JNI stubs from the sample Kotlin binding
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source examples/sample-binding/SampleEngine.kt \
+    --output examples/sample-binding/generated
+
+# Run the test suite
+python3 -m unittest discover -s scripts/tests
+```
 
 ## What This Is
 
@@ -66,13 +81,15 @@ jni-binding-generator/
 ├── docs/
 │   └── JNI_BINDING_GENERATOR_PLAN.md   # Full project plan & decision framework
 ├── scripts/
-│   ├── jni-binding-generator.py        # Core generator (to be implemented)
-│   ├── jni-utils.h                     # C++ helper snippets
+│   ├── jni-binding-generator.py        # Core generator (implemented)
+│   ├── jni-utils.h                     # C++ marshalling/exception helpers
 │   └── tests/
-│       ├── test_parser.py
-│       └── test_generator.py
+│       ├── test_parser.py              # Parser + JNI name-mangling tests
+│       └── test_generator.py           # Code-generation tests
 ├── examples/
 │   └── sample-binding/                 # Reference: before & after
+│       ├── SampleEngine.kt             # Input Kotlin
+│       └── generated/                  # Generated C++ (committed for reference)
 └── .gitignore
 ```
 
