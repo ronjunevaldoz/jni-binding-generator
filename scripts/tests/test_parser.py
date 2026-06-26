@@ -152,6 +152,44 @@ class TestTopLevelFun(unittest.TestCase):
         self.assertEqual(parsed.class_name, "Native")
 
 
+class TestMultiClass(unittest.TestCase):
+    _SOURCE = """
+package com.example
+
+class Alpha {
+    external fun doAlpha(x: Int): Long
+}
+
+class Beta {
+    external fun doBeta(s: String): Int
+}
+"""
+
+    def test_two_classes_produce_two_parsed_files(self):
+        results = gen.parse_kotlin_source_multi(self._SOURCE)
+        self.assertEqual(len(results), 2)
+        names = {r.class_name for r in results}
+        self.assertEqual(names, {"Alpha", "Beta"})
+
+    def test_each_class_has_its_own_functions(self):
+        results = gen.parse_kotlin_source_multi(self._SOURCE)
+        by_class = {r.class_name: r for r in results}
+        self.assertEqual([f.name for f in by_class["Alpha"].functions], ["doAlpha"])
+        self.assertEqual([f.name for f in by_class["Beta"].functions], ["doBeta"])
+
+    def test_package_propagated_to_each_class(self):
+        results = gen.parse_kotlin_source_multi(self._SOURCE)
+        for r in results:
+            self.assertEqual(r.package, "com.example")
+
+    def test_single_class_fast_path(self):
+        results = gen.parse_kotlin_source_multi(
+            "package a\nclass Solo { external fun f(x: Int): Long }"
+        )
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].class_name, "Solo")
+
+
 class TestMangling(unittest.TestCase):
     def test_basic_name(self):
         name = gen.jni_function_name("com.example.sample", "SampleEngine", "nativeLoad")

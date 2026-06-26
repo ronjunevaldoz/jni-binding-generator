@@ -135,8 +135,35 @@ TYPE_MAP = {
     "Set<Float>": TypeInfo(
         "jobject", "std::unordered_set<float>", "extract_set_float({env}, {var})"
     ),
+    "Set<Boolean>": TypeInfo(
+        "jobject", "std::unordered_set<bool>", "extract_set_bool({env}, {var})"
+    ),
+    "Set<Double>": TypeInfo(
+        "jobject", "std::unordered_set<double>", "extract_set_double({env}, {var})"
+    ),
     # java.util.List — Short variant (completes the primitive family)
     "List<Short>": TypeInfo("jobject", "std::vector<int16_t>", "extract_list_short({env}, {var})"),
+    # Nested List<List<T>> variants
+    "List<List<Int>>": TypeInfo(
+        "jobject",
+        "std::vector<std::vector<int32_t>>",
+        "extract_list_list_int({env}, {var})",
+    ),
+    "List<List<Float>>": TypeInfo(
+        "jobject",
+        "std::vector<std::vector<float>>",
+        "extract_list_list_float({env}, {var})",
+    ),
+    # Boxed Array<T> for remaining scalar types
+    "Array<Byte>": TypeInfo(
+        "jobjectArray", "std::vector<int8_t>", "extract_boxed_byte_array({env}, {var})"
+    ),
+    "Array<Boolean>": TypeInfo(
+        "jobjectArray", "std::vector<bool>", "extract_boxed_bool_array({env}, {var})"
+    ),
+    "Array<Short>": TypeInfo(
+        "jobjectArray", "std::vector<int16_t>", "extract_boxed_short_array({env}, {var})"
+    ),
     # java.util.Map variants
     "Map<String, String>": TypeInfo(
         "jobject",
@@ -167,6 +194,26 @@ TYPE_MAP = {
         "jobject",
         "std::unordered_map<int32_t, std::string>",
         "extract_map_int_string({env}, {var})",
+    ),
+    "Map<Int, Int>": TypeInfo(
+        "jobject",
+        "std::unordered_map<int32_t, int32_t>",
+        "extract_map_int_int({env}, {var})",
+    ),
+    "Map<Int, Long>": TypeInfo(
+        "jobject",
+        "std::unordered_map<int32_t, int64_t>",
+        "extract_map_int_long({env}, {var})",
+    ),
+    "Map<Int, Float>": TypeInfo(
+        "jobject",
+        "std::unordered_map<int32_t, float>",
+        "extract_map_int_float({env}, {var})",
+    ),
+    "Map<Int, Boolean>": TypeInfo(
+        "jobject",
+        "std::unordered_map<int32_t, bool>",
+        "extract_map_int_bool({env}, {var})",
     ),
     "Unit": TypeInfo("void", "void", None),
 }
@@ -202,16 +249,27 @@ RETURN_MAP = {
     "Array<Double>": ("jobjectArray", "nullptr"),
     "List<Short>": ("jobject", "nullptr"),
     "List<List<String>>": ("jobject", "nullptr"),
+    "List<List<Int>>": ("jobject", "nullptr"),
+    "List<List<Float>>": ("jobject", "nullptr"),
     "Set<String>": ("jobject", "nullptr"),
     "Set<Int>": ("jobject", "nullptr"),
     "Set<Long>": ("jobject", "nullptr"),
     "Set<Float>": ("jobject", "nullptr"),
+    "Set<Boolean>": ("jobject", "nullptr"),
+    "Set<Double>": ("jobject", "nullptr"),
+    "Array<Byte>": ("jobjectArray", "nullptr"),
+    "Array<Boolean>": ("jobjectArray", "nullptr"),
+    "Array<Short>": ("jobjectArray", "nullptr"),
     "Map<String, String>": ("jobject", "nullptr"),
     "Map<String, Int>": ("jobject", "nullptr"),
     "Map<String, Long>": ("jobject", "nullptr"),
     "Map<String, Float>": ("jobject", "nullptr"),
     "Map<String, Boolean>": ("jobject", "nullptr"),
     "Map<Int, String>": ("jobject", "nullptr"),
+    "Map<Int, Int>": ("jobject", "nullptr"),
+    "Map<Int, Long>": ("jobject", "nullptr"),
+    "Map<Int, Float>": ("jobject", "nullptr"),
+    "Map<Int, Boolean>": ("jobject", "nullptr"),
     "Unit": ("void", ""),
     None: ("void", ""),
 }
@@ -455,8 +513,67 @@ def parse_kotlin_source(source: str, filename: str = "") -> ParsedFile:
     )
 
 
-def parse_kotlin_file(path: Path) -> ParsedFile:
-    return parse_kotlin_source(path.read_text(encoding="utf-8"), filename=path.name)
+def _find_top_level_class_ranges(stripped: str) -> list[tuple[int, int]]:
+    """Return (start, end) character offsets of each top-level class/object block.
+
+    'Top-level' means the class/object keyword appears at brace depth 0 in the
+    stripped source (comments already removed).  Each range spans from the
+    keyword to the character after the matching closing brace.
+    """
+    _kw_re = re.compile(r"\b(class|object)\b")
+    ranges: list[tuple[int, int]] = []
+    for m in _kw_re.finditer(stripped):
+        prefix = stripped[: m.start()]
+        depth = prefix.count("{") - prefix.count("}")
+        if depth != 0:
+            continue  # nested class — belongs to its parent
+        after = stripped[m.end() :]
+        brace_pos = after.find("{")
+        if brace_pos == -1:
+            continue  # no body (interface / abstract without body)
+        body_start = m.end() + brace_pos + 1
+        d = 1
+        pos = body_start
+        while pos < len(stripped) and d > 0:
+            c = stripped[pos]
+            if c == "{":
+                d += 1
+            elif c == "}":
+                d -= 1
+            pos += 1
+        ranges.append((m.start(), pos))
+    return ranges
+
+
+def parse_kotlin_source_multi(source: str, filename: str = "") -> list[ParsedFile]:
+    """Parse a Kotlin source file that may contain multiple top-level classes.
+
+    Returns one ParsedFile per top-level class/object that contains at least one
+    external fun.  If the file has only one class (the common case) this is
+    equivalent to [parse_kotlin_source(source, filename)].
+    """
+    stripped = _strip_comments(source)
+    ranges = _find_top_level_class_ranges(stripped)
+
+    if len(ranges) <= 1:
+        # Single class or top-level funs — fast path.
+        return [parse_kotlin_source(source, filename)]
+
+    pkg_match = _PACKAGE_RE.search(stripped)
+    pkg_prefix = f"package {pkg_match.group(1)}\n\n" if pkg_match else ""
+
+    results: list[ParsedFile] = []
+    for start, end in ranges:
+        segment = pkg_prefix + stripped[start:end]
+        parsed = parse_kotlin_source(segment, filename)
+        if parsed.functions:
+            results.append(parsed)
+
+    return results if results else [parse_kotlin_source(source, filename)]
+
+
+def parse_kotlin_file(path: Path) -> list[ParsedFile]:
+    return parse_kotlin_source_multi(path.read_text(encoding="utf-8"), filename=path.name)
 
 
 # --------------------------------------------------------------------------- #
@@ -589,6 +706,14 @@ _MAKE_HELPER_MAP: dict[str, tuple[str, str]] = {
     "Set<Int>": ("make_set_int", "std::unordered_set<int32_t>"),
     "Set<Long>": ("make_set_long", "std::unordered_set<int64_t>"),
     "Set<Float>": ("make_set_float", "std::unordered_set<float>"),
+    "Set<Boolean>": ("make_set_bool", "std::unordered_set<bool>"),
+    "Set<Double>": ("make_set_double", "std::unordered_set<double>"),
+    "List<List<Int>>": ("make_list_list_int", "std::vector<std::vector<int32_t>>"),
+    "List<List<Float>>": ("make_list_list_float", "std::vector<std::vector<float>>"),
+    "Map<Int, Int>": ("make_map_int_int", "std::unordered_map<int32_t, int32_t>"),
+    "Map<Int, Long>": ("make_map_int_long", "std::unordered_map<int32_t, int64_t>"),
+    "Map<Int, Float>": ("make_map_int_float", "std::unordered_map<int32_t, float>"),
+    "Map<Int, Boolean>": ("make_map_int_bool", "std::unordered_map<int32_t, bool>"),
     "Map<String, String>": (
         "make_map_string_string",
         "std::unordered_map<std::string, std::string>",
@@ -754,12 +879,59 @@ EXIT_PARSE = 2  # unrecognized type or parse failure
 EXIT_DRIFT = 3  # --check found out-of-date / missing output
 
 
+def load_type_map(path: Path) -> None:
+    """Merge custom Kotlin→JNI type mappings from a JSON file into the module-level maps.
+
+    JSON schema (all sections optional):
+    {
+      "types": {
+        "MyHandle": {
+          "jni_type": "jlong",
+          "cpp_type": "void*",
+          "convert": "reinterpret_cast<void*>({var})",
+          "is_handle": true
+        }
+      },
+      "returns": {
+        "MyHandle": ["jlong", "0"]
+      },
+      "make_helpers": {
+        "MyList": ["make_my_list", "std::vector<MyItem>"]
+      }
+    }
+
+    Custom types override built-ins if the same key is present in both.
+    """
+    import json
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"could not load type map '{path}': {exc}") from exc
+
+    for kotlin_type, info in data.get("types", {}).items():
+        TYPE_MAP[kotlin_type] = TypeInfo(
+            jni_type=info["jni_type"],
+            cpp_type=info["cpp_type"],
+            convert=info.get("convert"),
+            is_handle=bool(info.get("is_handle", False)),
+            is_string=bool(info.get("is_string", False)),
+        )
+
+    for kotlin_type, pair in data.get("returns", {}).items():
+        RETURN_MAP[kotlin_type] = (pair[0], pair[1])
+
+    for kotlin_type, pair in data.get("make_helpers", {}).items():
+        _MAKE_HELPER_MAP[kotlin_type] = (pair[0], pair[1])
+
+
 def run(
     kotlin_source: Path,
     output_dir: Path,
     dry_run: bool,
     check: bool,
     generate_tests: bool = False,
+    diff: bool = False,
 ) -> int:
     files = collect_kotlin_files(kotlin_source)
     if not files:
@@ -767,16 +939,17 @@ def run(
         return EXIT_USAGE
 
     # Pre-pass: parse every file so we can detect class-name collisions before
-    # choosing output names.
+    # choosing output names.  A single .kt may yield multiple ParsedFiles when
+    # it contains more than one top-level class/object.
     parsed_files: list[tuple[Path, ParsedFile]] = []
     for kt in files:
         try:
-            parsed = parse_kotlin_file(kt)
+            for parsed in parse_kotlin_file(kt):
+                if parsed.functions:
+                    parsed_files.append((kt, parsed))
         except ValueError as exc:
             print(f"Error in {kt}: {exc}", file=sys.stderr)
             return EXIT_PARSE
-        if parsed.functions:
-            parsed_files.append((kt, parsed))
 
     name_counts: dict = {}
     for _, parsed in parsed_files:
@@ -804,6 +977,24 @@ def run(
             print(f"[check] {out_path}: {status}")
             if not up_to_date:
                 drifted.append(out_path)
+        elif diff:
+            import difflib
+
+            old_lines = existing.splitlines(keepends=True) if existing else []
+            new_lines = content.splitlines(keepends=True)
+            delta = list(
+                difflib.unified_diff(
+                    old_lines,
+                    new_lines,
+                    fromfile=str(out_path),
+                    tofile=str(out_path) + " (new)",
+                )
+            )
+            if delta:
+                print(f"--- {out_path}")
+                print("".join(delta))
+            else:
+                print(f"{out_path}: unchanged")
         elif dry_run:
             print(f"{kt}  ->  {out_path}  ({len(parsed.functions)} fn) [dry-run]")
             print(content)
@@ -877,11 +1068,31 @@ def parse_args(argv=None):
         action="store_true",
         help="Also emit a *_jni_test.gen.cpp compile-time type-check file alongside each binding",
     )
+    parser.add_argument(
+        "--type-map",
+        metavar="FILE",
+        help="JSON file with custom Kotlin→JNI type mappings to merge before generation",
+    )
+    parser.add_argument(
+        "--diff",
+        action="store_true",
+        help="Print a unified diff of what would change without writing files",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv=None) -> int:
     args = parse_args(argv)
+    if args.type_map:
+        type_map_path = Path(args.type_map)
+        if not type_map_path.exists():
+            print(f"Error: --type-map file not found: {type_map_path}", file=sys.stderr)
+            return EXIT_USAGE
+        try:
+            load_type_map(type_map_path)
+        except ValueError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return EXIT_USAGE
     kotlin_source = Path(args.kotlin_source)
     if not kotlin_source.exists():
         print(f"Error: Kotlin source path does not exist: {kotlin_source}", file=sys.stderr)
@@ -892,6 +1103,7 @@ def main(argv=None) -> int:
         args.dry_run,
         args.check,
         args.generate_tests,
+        args.diff,
     )
 
 

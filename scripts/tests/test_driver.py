@@ -164,5 +164,101 @@ class TestErrors(DriverTestCase):
         self.assertEqual(bad.line, 6)
 
 
+class TestTypeMap(DriverTestCase):
+    _CUSTOM_SOURCE = """
+package com.example
+
+class N {
+    external fun load(cfg: NativeConfig): Long
+    external fun getConfigs(h: Long): ConfigList
+}
+"""
+    _TYPE_MAP_JSON = """{
+  "types": {
+    "NativeConfig": {
+      "jni_type": "jobject",
+      "cpp_type": "native_config_t",
+      "convert": "extract_native_config({env}, {var})"
+    },
+    "ConfigList": {
+      "jni_type": "jobject",
+      "cpp_type": "std::vector<native_config_t>",
+      "convert": "extract_config_list({env}, {var})"
+    }
+  },
+  "returns": {
+    "NativeConfig": ["jobject", "nullptr"],
+    "ConfigList": ["jobject", "nullptr"]
+  },
+  "make_helpers": {
+    "ConfigList": ["make_config_list", "std::vector<native_config_t>"]
+  }
+}"""
+
+    def setUp(self):
+        super().setUp()
+        (self.src / "N.kt").write_text(self._CUSTOM_SOURCE, encoding="utf-8")
+        self.type_map = self.root / "types.json"
+        self.type_map.write_text(self._TYPE_MAP_JSON, encoding="utf-8")
+
+    def test_custom_type_resolves_without_error(self):
+        rc = self.run_gen("--type-map", str(self.type_map))
+        self.assertEqual(rc, gen.EXIT_OK)
+
+    def test_custom_type_appears_in_output(self):
+        self.run_gen("--type-map", str(self.type_map))
+        content = (self.out / "N_jni.gen.cpp").read_text(encoding="utf-8")
+        self.assertIn("extract_native_config(env, cfg)", content)
+        self.assertIn("make_config_list", content)
+
+    def test_missing_type_map_file_is_usage_error(self):
+        rc = self.run_gen("--type-map", str(self.root / "no_such.json"))
+        self.assertEqual(rc, gen.EXIT_USAGE)
+
+
+class TestDiffMode(DriverTestCase):
+    def test_diff_no_existing_shows_output(self):
+        import io
+        from contextlib import redirect_stdout
+
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            rc = self.run_gen("--diff")
+        self.assertEqual(rc, gen.EXIT_OK)
+        out = buf.getvalue()
+        self.assertIn("SampleEngine_jni.gen.cpp", out)
+
+    def test_diff_does_not_write_files(self):
+        self.run_gen("--diff")
+        self.assertFalse((self.out / "SampleEngine_jni.gen.cpp").exists())
+
+    def test_diff_unchanged_reports_unchanged(self):
+        import io
+        from contextlib import redirect_stdout
+
+        self.run_gen()
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            rc = self.run_gen("--diff")
+        self.assertEqual(rc, gen.EXIT_OK)
+        self.assertIn("unchanged", buf.getvalue())
+
+    def test_diff_after_source_change_shows_diff(self):
+        import io
+        from contextlib import redirect_stdout
+
+        self.run_gen()
+        (self.src / "SampleEngine.kt").write_text(
+            SOURCE.replace("threads: Int", "threads: Int, extra: String"),
+            encoding="utf-8",
+        )
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            rc = self.run_gen("--diff")
+        self.assertEqual(rc, gen.EXIT_OK)
+        out = buf.getvalue()
+        self.assertIn("@@", out)
+
+
 if __name__ == "__main__":
     unittest.main()

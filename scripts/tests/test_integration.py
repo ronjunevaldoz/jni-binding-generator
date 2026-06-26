@@ -66,6 +66,8 @@ class NewEngine {
     external fun nativeGetIdSet(handle: Long): Set<Int>
     external fun nativeGetHandleSet(handle: Long): Set<Long>
     external fun nativeGetScoreSet(handle: Long): Set<Float>
+    external fun nativeGetBoolSet(handle: Long): Set<Boolean>
+    external fun nativeGetDoubleSet(handle: Long): Set<Double>
 
     // Map variants
     external fun nativeGetMeta(handle: Long): Map<String, String>
@@ -74,6 +76,10 @@ class NewEngine {
     external fun nativeGetScoreMap(handle: Long): Map<String, Float>
     external fun nativeGetFeatureFlags(handle: Long): Map<String, Boolean>
     external fun nativeGetLabels(handle: Long): Map<Int, String>
+    external fun nativeGetIntMap(handle: Long): Map<Int, Int>
+    external fun nativeGetIntLongMap(handle: Long): Map<Int, Long>
+    external fun nativeGetIntFloatMap(handle: Long): Map<Int, Float>
+    external fun nativeGetIntBoolMap(handle: Long): Map<Int, Boolean>
 
     // Enum (auto-detected PascalCase)
     external fun nativeGetStrategy(handle: Long): SamplingStrategy

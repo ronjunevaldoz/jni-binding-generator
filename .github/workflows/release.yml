@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint
+        run: ruff check scripts/ && ruff format --check scripts/
+
+      - name: Run tests
+        run: python3 -m unittest discover -s scripts/tests -v
+
+      - name: Create release archive
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          ARCHIVE="jni-binding-generator-${VERSION}.tar.gz"
+          tar -czf "$ARCHIVE" \
+            scripts/jni-binding-generator.py \
+            scripts/jni-utils.h \
+            README.md \
+            CHANGELOG.md \
+            docs/
+          echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        run: |
+          python3 - <<'EOF'
+          import re, os
+          changelog = open("CHANGELOG.md").read()
+          # Grab the first H2 section (Unreleased or the newest version)
+          m = re.search(r"^## \[.*?\].*?\n(.*?)(?=^## |\Z)", changelog, re.M | re.S)
+          notes = m.group(1).strip() if m else ""
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"notes<<EOF_NOTES\n{notes}\nEOF_NOTES\n")
+          EOF
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "jni-binding-generator ${{ env.VERSION }}"
+          body: ${{ steps.notes.outputs.notes }}
+          files: |
+            ${{ env.ARCHIVE }}
+            scripts/jni-binding-generator.py
+            scripts/jni-utils.h
