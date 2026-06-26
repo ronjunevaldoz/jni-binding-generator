@@ -22,12 +22,23 @@ fully-formed JNI entry points with correct `Java_*` mangled names, argument
 marshalling, null/empty error checks, and a TODO body for the hand-written
 native call.
 
+[`generated/SampleEngine_jni_test.gen.cpp`](generated/SampleEngine_jni_test.gen.cpp) —
+compile-time type-check file produced by `--generate-tests`. Every `extract_*`
+and `make_*` helper call is inside an `if (false)` block so the compiler
+verifies types without executing them.
+
 ## Regenerate
 
 ```bash
 python3 scripts/jni-binding-generator.py \
     --kotlin-source examples/sample-binding/SampleEngine.kt \
     --output examples/sample-binding/generated
+
+# Also regenerate the type-check file:
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source examples/sample-binding/SampleEngine.kt \
+    --output examples/sample-binding/generated \
+    --generate-tests
 ```
 
 ## Verify it compiles

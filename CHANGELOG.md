@@ -9,6 +9,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.7] — 2026-06-26
+
+### Fixed
+- `examples/sample-binding/README.md`: the committed `SampleEngine_jni_test.gen.cpp`
+  output file was not mentioned. Added an Output entry describing the compile-time
+  type-check file and a `--generate-tests` regenerate command.
+- `gradle-integration/README.md`: removed stale "Phase 2" from the heading.
+
+---
+
 ## [1.3.6] — 2026-06-26
 
 ### Fixed

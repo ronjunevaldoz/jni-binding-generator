@@ -1,4 +1,4 @@
-# Gradle Integration (Phase 2)
+# Gradle Integration
 
 Two ways to run the generator from Gradle. Start with **Option A** — it needs
 zero plugin infrastructure and is the right choice for one or two bindings.
