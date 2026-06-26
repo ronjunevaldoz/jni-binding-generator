@@ -48,6 +48,13 @@ python3 scripts/jni-binding-generator.py \
     --output examples/sample-binding/generated \
     --diff
 
+# Reverse mode: scaffold Kotlin external fun stubs from a C/C++ header
+# (useful when you have an existing native library and want to start from the C API)
+python3 scripts/jni-binding-generator.py \
+    --kotlin-from-header include/my_engine.h \
+    --output src/main/kotlin/com/example/native \
+    --kotlin-package com.example.native
+
 # Load custom Kotlin→JNI type mappings from a JSON file
 python3 scripts/jni-binding-generator.py \
     --kotlin-source src/ \
@@ -100,7 +107,28 @@ shared/src/
   commonMain/NativeBridge.kt      ← expect class (not processed)
 ```
 
-Wire it in `shared/build.gradle.kts`:
+Wire it in `shared/build.gradle.kts` using the convention plugin (see [`gradle-integration/`](gradle-integration/)):
+
+```kotlin
+plugins { id("jni-generator") }  // from build-logic included build
+
+jniGenerator {
+    generatorScript = file("$rootDir/scripts/jni-binding-generator.py")
+    bindings {
+        register("android") {
+            kotlinSource = layout.projectDirectory.dir("src/androidMain/kotlin")
+            outputDir    = rootProject.layout.projectDirectory.dir("androidApp/src/main/cpp/generated")
+        }
+        register("desktop") {
+            kotlinSource = layout.projectDirectory.dir("src/desktopMain/kotlin")
+            outputDir    = rootProject.layout.projectDirectory.dir("desktopApp/src/jvmMain/cpp/generated")
+        }
+    }
+}
+tasks.named("preBuild") { dependsOn("generateJniBindings") }
+```
+
+Or as a plain `Exec` task (no build-logic needed):
 
 ```kotlin
 tasks.register<Exec>("generateJniAndroid") {

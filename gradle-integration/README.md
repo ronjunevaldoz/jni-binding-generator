@@ -4,11 +4,9 @@ Two ways to run the generator from Gradle. Start with **Option A** — it needs
 zero plugin infrastructure and is the right choice for one or two bindings.
 Move to **Option B** when you have several bindings and want a typed DSL.
 
-> **Note:** These files were authored against the Gradle Kotlin DSL but were
-> not executed in the environment they were written in (no Gradle binary /
-> offline). Treat them as a starting template — run `./gradlew tasks` once
-> after copying to confirm the task appears. The Python CLI they invoke is
-> tested and verified.
+> **Note:** The `build-logic/` convention plugin is also used verbatim in
+> [`examples/kmp-binding/`](../examples/kmp-binding/), which serves as a
+> living, continuously-checked reference for both options.
 
 ---
 

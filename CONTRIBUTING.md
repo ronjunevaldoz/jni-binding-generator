@@ -34,13 +34,29 @@ ruff format --check scripts/
 3. Add or update tests (`scripts/tests/`) to cover the change
 4. Run the full suite and confirm all 207 tests pass
 5. Run `ruff check scripts/` — no lint errors
-6. If you changed `scripts/jni-binding-generator.py`, re-run the drift check:
+6. Re-run all drift checks to confirm generated files are up to date:
    ```bash
+   # Forward pass (Kotlin → C++)
    python3 scripts/jni-binding-generator.py \
        --kotlin-source examples/sample-binding/SampleEngine.kt \
-       --output examples/sample-binding/generated \
-       --check
+       --output examples/sample-binding/generated --check --generate-tests
+   python3 scripts/jni-binding-generator.py \
+       --kotlin-source examples/android-binding/src/ImageClassifier.kt \
+       --output examples/android-binding/generated --check
+   python3 scripts/jni-binding-generator.py \
+       --kotlin-source examples/kmp-binding/shared/src/androidMain/kotlin \
+       --output examples/kmp-binding/androidApp/src/main/cpp/generated --check
+   python3 scripts/jni-binding-generator.py \
+       --kotlin-source examples/kmp-binding/shared/src/desktopMain/kotlin \
+       --output examples/kmp-binding/desktopApp/src/jvmMain/cpp/generated --check
+
+   # Reverse pass (C header → Kotlin stubs)
+   python3 scripts/jni-binding-generator.py \
+       --kotlin-from-header examples/android-binding/include/image_classifier.h \
+       --output examples/android-binding/src \
+       --kotlin-package com.example.android.classifier --check
    ```
+   All of these are also run by the pre-commit hooks automatically.
 7. Update `CHANGELOG.md` under `[Unreleased]`
 8. Submit a pull request
 

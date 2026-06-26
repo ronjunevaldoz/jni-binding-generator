@@ -44,3 +44,21 @@ native/jni/generated/
 
 # pytest
 .pytest_cache/
+
+# Gradle build outputs (examples are reference projects — don't commit their build dirs)
+.gradle/
+**/build/
+!**/src/**/build/
+gradle-wrapper.jar
+
+# Android / KMP local config (machine-specific)
+local.properties
+*.jks
+*.keystore
+
+# Kotlin compilation cache
+.kotlin/
+**/.kotlin/
+
+# Compose desktop packaging output
+compose-desktop.pro
