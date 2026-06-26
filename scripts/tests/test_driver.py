@@ -114,6 +114,28 @@ class TestOutputNaming(DriverTestCase):
         self.assertTrue((self.out / "SampleEngine_jni.gen.cpp").exists())
 
 
+class TestGenerateTests(DriverTestCase):
+    def test_generate_tests_flag_emits_test_file(self):
+        rc = self.run_gen("--generate-tests")
+        self.assertEqual(rc, gen.EXIT_OK)
+        test_file = self.out / "SampleEngine_jni_test.gen.cpp"
+        self.assertTrue(test_file.exists(), "expected test file to be written")
+
+    def test_generate_tests_content(self):
+        self.run_gen("--generate-tests")
+        content = (self.out / "SampleEngine_jni_test.gen.cpp").read_text()
+        self.assertIn("if (false)", content)
+        self.assertIn("int main()", content)
+        self.assertIn("AUTO-GENERATED", content)
+
+    def test_generate_tests_incremental(self):
+        self.run_gen("--generate-tests")
+        test_file = self.out / "SampleEngine_jni_test.gen.cpp"
+        before_mtime = test_file.stat().st_mtime_ns
+        self.run_gen("--generate-tests")
+        self.assertEqual(test_file.stat().st_mtime_ns, before_mtime)
+
+
 class TestErrors(DriverTestCase):
     def test_missing_source_path_is_usage_error(self):
         rc = gen.main(["--kotlin-source", str(self.root / "nope"), "--output", str(self.out)])

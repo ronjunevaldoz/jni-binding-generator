@@ -112,6 +112,83 @@ class TestGeneration(unittest.TestCase):
         self.assertIn("not initialized", out)
         self.assertIn("is required", out)
 
+    def test_double_array_and_bool_array(self):
+        parsed = gen.parse_kotlin_source(
+            "package a.b\nclass N {\n"
+            "    external fun f(data: DoubleArray, flags: BooleanArray): ShortArray\n}"
+        )
+        out = gen.generate_function(parsed, parsed.functions[0])
+        self.assertIn("jdoubleArray data", out)
+        self.assertIn("extract_double_array(env, data)", out)
+        self.assertIn("jbooleanArray flags", out)
+        self.assertIn("extract_bool_array(env, flags)", out)
+        self.assertIn("JNIEXPORT jshortArray JNICALL", out)
+
+    def test_short_array(self):
+        parsed = gen.parse_kotlin_source(
+            "package a.b\nclass N { external fun f(samples: ShortArray): ShortArray }"
+        )
+        out = gen.generate_function(parsed, parsed.functions[0])
+        self.assertIn("jshortArray samples", out)
+        self.assertIn("extract_short_array(env, samples)", out)
+        self.assertIn("JNIEXPORT jshortArray JNICALL", out)
+
+    def test_list_bool_return_hints_make_helper(self):
+        parsed = gen.parse_kotlin_source(
+            "package a.b\nclass N { external fun f(h: Long): List<Boolean> }"
+        )
+        out = gen.generate_function(parsed, parsed.functions[0])
+        self.assertIn("make_list_bool", out)
+
+    def test_list_byte_return_hints_make_helper(self):
+        parsed = gen.parse_kotlin_source(
+            "package a.b\nclass N { external fun f(h: Long): List<Byte> }"
+        )
+        out = gen.generate_function(parsed, parsed.functions[0])
+        self.assertIn("make_list_byte", out)
+
+    def test_map_int_string_return_hints_make_helper(self):
+        parsed = gen.parse_kotlin_source(
+            "package a.b\nclass N { external fun f(h: Long): Map<Int, String> }"
+        )
+        out = gen.generate_function(parsed, parsed.functions[0])
+        self.assertIn("make_map_int_string", out)
+
+    def test_generate_test_file_structure(self):
+        content = gen.generate_test_file(self.parsed, "SampleEngine.kt")
+        self.assertIn("AUTO-GENERATED", content)
+        self.assertIn("#include <jni.h>", content)
+        self.assertIn('#include "jni-utils.h"', content)
+        self.assertIn("if (false)", content)
+        self.assertIn("int main()", content)
+        self.assertIn("_compile_check_SampleEngine", content)
+
+    def test_generate_test_file_covers_param_helpers(self):
+        content = gen.generate_test_file(self.parsed, "SampleEngine.kt")
+        # nativeLoad has String + Int params
+        self.assertIn("jstring2string(env, modelPath)", content)
+        self.assertIn("static_cast<int32_t>(threads)", content)
+
+    def test_generate_test_file_covers_make_helpers(self):
+        parsed = gen.parse_kotlin_source(
+            "package a.b\nclass N {\n"
+            "    external fun f(h: Long): List<String>\n"
+            "    external fun g(h: Long): Map<String, Int>\n"
+            "    external fun s(h: Long): Set<String>\n"
+            "}"
+        )
+        content = gen.generate_test_file(parsed, "N.kt")
+        self.assertIn("make_list_string(env", content)
+        self.assertIn("make_map_string_int(env", content)
+        self.assertIn("make_set_string(env", content)
+
+    def test_generate_test_file_skips_void(self):
+        parsed = gen.parse_kotlin_source("package a.b\nclass N { external fun release(h: Long) }")
+        content = gen.generate_test_file(parsed, "N.kt")
+        # void functions: param still has Long, no make_* needed
+        self.assertIn("if (false)", content)
+        self.assertNotIn("make_", content)
+
     def test_full_file_has_header_and_includes(self):
         content = gen.generate_file(self.parsed, "SampleEngine.kt")
         self.assertIn("AUTO-GENERATED", content)

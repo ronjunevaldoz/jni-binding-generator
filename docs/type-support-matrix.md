@@ -35,10 +35,13 @@ Non-nullable `String` params get an `.empty()` guard; nullable ones (`String?`) 
 
 | Kotlin type  | As param | As return | C++ type                    | JNI type      |
 |---|:---:|:---:|---|---|
-| `ByteArray`  | ✅ | ✅ | `std::vector<uint8_t>`  | `jbyteArray`  |
-| `IntArray`   | ✅ | ✅ | `std::vector<int32_t>`  | `jintArray`   |
-| `LongArray`  | ✅ | ✅ | `std::vector<int64_t>`  | `jlongArray`  |
-| `FloatArray` | ✅ | ✅ | `std::vector<float>`    | `jfloatArray` |
+| `ByteArray`    | ✅ | ✅ | `std::vector<uint8_t>`  | `jbyteArray`    |
+| `IntArray`     | ✅ | ✅ | `std::vector<int32_t>`  | `jintArray`     |
+| `LongArray`    | ✅ | ✅ | `std::vector<int64_t>`  | `jlongArray`    |
+| `FloatArray`   | ✅ | ✅ | `std::vector<float>`    | `jfloatArray`   |
+| `ShortArray`   | ✅ | ✅ | `std::vector<int16_t>`  | `jshortArray`   |
+| `DoubleArray`  | ✅ | ✅ | `std::vector<double>`   | `jdoubleArray`  |
+| `BooleanArray` | ✅ | ✅ | `std::vector<bool>`     | `jbooleanArray` |
 
 Nullable not supported for array types (JNI doesn't distinguish null vs empty array in practice).
 
@@ -57,8 +60,8 @@ Nullable not supported for array types (JNI doesn't distinguish null vs empty ar
 | `List<Long>`    | ✅ | ✅ | `std::vector<int64_t>`      | `jobject` | `extract_list_long`     | `make_list_long`   |
 | `List<Float>`   | ✅ | ✅ | `std::vector<float>`        | `jobject` | `extract_list_float`    | `make_list_float`  |
 | `List<Double>`  | ✅ | ✅ | `std::vector<double>`       | `jobject` | `extract_list_double`   | `make_list_double` |
-| `List<Boolean>` | ✅ | ✅ | `std::vector<bool>`         | `jobject` | `extract_list_bool`     | —                  |
-| `List<Byte>`    | ✅ | ✅ | `std::vector<int8_t>`       | `jobject` | `extract_list_byte`     | —                  |
+| `List<Boolean>` | ✅ | ✅ | `std::vector<bool>`         | `jobject` | `extract_list_bool`     | `make_list_bool`   |
+| `List<Byte>`    | ✅ | ✅ | `std::vector<int8_t>`       | `jobject` | `extract_list_byte`     | `make_list_byte`   |
 
 For return types the generated TODO body includes a comment like:
 ```
@@ -69,9 +72,9 @@ For return types the generated TODO body includes a comment like:
 
 | Kotlin type              | As param | As return | C++ type                                          | JNI type  |
 |---|:---:|:---:|---|---|
-| `Map<String, String>`    | ✅ | ✅ | `std::unordered_map<std::string, std::string>` | `jobject` |
-| `Map<String, Int>`       | ✅ | ✅ | `std::unordered_map<std::string, int32_t>`     | `jobject` |
-| `Map<Int, String>`       | ✅ | ✅ | `std::unordered_map<int32_t, std::string>`     | `jobject` |
+| `Map<String, String>`    | ✅ | ✅ | `std::unordered_map<std::string, std::string>` | `jobject` | `extract_map_string_string` / `make_map_string_string` |
+| `Map<String, Int>`       | ✅ | ✅ | `std::unordered_map<std::string, int32_t>`     | `jobject` | `extract_map_string_int` / `make_map_string_int`       |
+| `Map<Int, String>`       | ✅ | ✅ | `std::unordered_map<int32_t, std::string>`     | `jobject` | `extract_map_int_string` / `make_map_int_string`       |
 
 ## Complex types (not supported)
 

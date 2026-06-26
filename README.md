@@ -10,19 +10,17 @@ Automate boilerplate code generation for JNI (Java Native Interface) bindings fr
 
 ## Status
 
-✅ **Phases 1–3 implemented** — the Python generator parses Kotlin `external fun`
-declarations and emits compiling C++ JNI stubs, with Gradle integration,
-incremental writes, a `--check` drift mode, line-numbered errors, CI, and
-pre-commit hooks. A worked example lives in
-[`examples/sample-binding/`](examples/sample-binding/), and the generated output
-is verified to compile against the JDK's JNI headers.
+✅ **Fully implemented.** The generator parses Kotlin `external fun` declarations
+and emits compiling C++ JNI stubs with full type support, Gradle integration,
+incremental writes, drift detection, and comprehensive docs.
 
-Phase 2 (Gradle integration) ships as a copy-paste template in
-[`gradle-integration/`](gradle-integration/README.md) — a raw `Exec` task for
-simple setups and a precompiled `id("jni-generator")` convention plugin with a
-`jniGenerator { bindings { ... } }` DSL for multi-binding projects.
-
-See [PLAN.md](docs/JNI_BINDING_GENERATOR_PLAN.md) for the full roadmap (Phases 0–3).
+| Area | Detail |
+|---|---|
+| **Type coverage** | All Kotlin primitives, `String`, all `*Array` variants, `List<T>`, `Set<T>`, `Map<K,V>`, nested collections, enums |
+| **Tests** | 43 unit tests across 4 suites + compile-check integration test against real JDK headers |
+| **Docs** | [Type matrix](docs/type-support-matrix.md) · [Memory management](docs/memory-management.md) · [Unit testing](docs/unit-testing.md) |
+| **CI / hooks** | Pre-commit: ruff lint + unit tests + drift check |
+| **Gradle** | Raw `Exec` task or typed `jniGenerator { bindings { ... } }` convention plugin |
 
 ## Try It
 
@@ -31,6 +29,12 @@ See [PLAN.md](docs/JNI_BINDING_GENERATOR_PLAN.md) for the full roadmap (Phases 0
 python3 scripts/jni-binding-generator.py \
     --kotlin-source examples/sample-binding/SampleEngine.kt \
     --output examples/sample-binding/generated
+
+# Also emit a compile-time type-check file (*_jni_test.gen.cpp) alongside each binding
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source examples/sample-binding/SampleEngine.kt \
+    --output examples/sample-binding/generated \
+    --generate-tests
 
 # Run the test suite (unit + integration compile test)
 python3 -m unittest discover -s scripts/tests
@@ -94,43 +98,41 @@ if (!handle) {
 jni-binding-generator/
 ├── README.md                           # This file
 ├── LICENSE                             # Apache 2.0
+├── ruff.toml                           # Python linter config (ruff)
+├── .pre-commit-config.yaml             # Pre-commit: ruff + tests + drift check
 ├── docs/
-│   └── JNI_BINDING_GENERATOR_PLAN.md   # Full project plan & decision framework
+│   ├── JNI_BINDING_GENERATOR_PLAN.md   # Full project plan & decision framework
+│   ├── type-support-matrix.md          # All supported Kotlin types (param/return status)
+│   ├── memory-management.md            # Local-ref contract, make_* ownership, global refs
+│   └── unit-testing.md                 # Test suites, how to add tests, exit codes
 ├── scripts/
-│   ├── jni-binding-generator.py        # Core generator (implemented)
-│   ├── jni-utils.h                     # C++ marshalling/exception helpers
+│   ├── jni-binding-generator.py        # Core generator
+│   ├── jni-utils.h                     # C++ marshalling/exception helpers (header-only)
 │   └── tests/
 │       ├── test_parser.py              # Parser + JNI name-mangling tests
-│       └── test_generator.py           # Code-generation tests
+│       ├── test_generator.py           # Code-generation + compile-check tests
+│       ├── test_driver.py              # CLI driver: incremental writes, --check, --generate-tests
+│       └── test_integration.py         # Compile test against real JDK headers (all types)
 ├── examples/
 │   └── sample-binding/                 # Reference: before & after
 │       ├── SampleEngine.kt             # Input Kotlin
-│       └── generated/                  # Generated C++ (committed for reference)
-├── gradle-integration/                 # Phase 2: run the generator from Gradle
+│       └── generated/
+│           ├── SampleEngine_jni.gen.cpp      # Generated JNI stubs
+│           └── SampleEngine_jni_test.gen.cpp # Generated compile-time type-check
+├── gradle-integration/                 # Run the generator from Gradle
 │   ├── README.md                       # Raw-task and convention-plugin options
 │   └── build-logic/                    # Precompiled `id("jni-generator")` plugin
 └── .gitignore
 ```
 
-## Decision & Next Steps
-
-**Question:** Should we build this?
-
-👉 **Read [PLAN.md](docs/JNI_BINDING_GENERATOR_PLAN.md)** to:
-1. Understand the problem and proposed solution
-2. Review implementation phases (3–4 weeks)
-3. Answer 5 decision questions
-4. See when parking is recommended vs proceeding
-
 ## Quick Facts
 
 | Aspect | Detail |
 |---|---|
-| **Estimated effort (MVP)** | 3 weeks (9–13 days) |
-| **Language** | Python 3.9+ (core) + optional Kotlin (Gradle wrapper) |
-| **First decision gate** | After Phase 0 (agent skill, 2–3 days) |
-| **ROI break-even** | Adding binding #4 (saves ~2 hours per new binding after initial investment) |
-| **Publishing** | Deferred to Phase 2+ (local integration first) |
+| **Language** | Python 3.9+ (generator) · C++ header-only helpers · optional Kotlin (Gradle DSL) |
+| **Dependencies** | None at runtime — stdlib only; `ruff` for linting; `pre-commit` for hooks |
+| **ROI break-even** | ~4th binding (saves ~2 hrs of hand-written boilerplate per new binding) |
+| **Original plan** | [PLAN.md](docs/JNI_BINDING_GENERATOR_PLAN.md) — phases 0–3 and decision framework |
 
 ## Credits & Attribution
 
@@ -155,7 +157,6 @@ Share feedback or questions in issues (when repo is live).
 
 ---
 
-**Status:** Awaiting decision to proceed or park.  
 **Owner:** Ron Valdoz  
 **Reference:** [awake-vulkan-generator](https://github.com/ronjunevaldoz/awake/tree/vulkan/awake-vulkan-generator)  
 **License:** Apache 2.0

@@ -19,20 +19,63 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 gen = importlib.import_module("jni-binding-generator")
 
 
-# A fresh binding not otherwise in the repo, covering every supported type.
+# Covers every type in TYPE_MAP / RETURN_MAP so the compile test catches
+# signature regressions for all supported Kotlin → JNI mappings.
 NEW_BINDING = """
 package com.example.integration
 
 class NewEngine {
+    // Primitives
     external fun nativeOpen(path: String, threads: Int, gpu: Boolean): Long
+    external fun nativeSetScale(handle: Long, scale: Float): Double
+    external fun nativeGetShort(handle: Long, idx: Int): Short
+    external fun nativeGetByte(handle: Long, idx: Int): Byte
+
+    // String
+    external fun nativeGetName(handle: Long): String
+    external fun nativeMaybeTag(handle: Long): String?
+
+    // Primitive arrays
     external fun nativeInfer(
         handle: Long,
-        prompt: String,
         logits: FloatArray,
         ids: IntArray,
-        temperature: Float,
+        weights: LongArray,
+        samples: ShortArray,
+        gains: DoubleArray,
+        mask: BooleanArray,
     ): ByteArray?
+
+    // Object arrays
     external fun nativeBatch(handle: Long, prompts: Array<String>): IntArray
+
+    // List variants
+    external fun nativeGetTags(handle: Long): List<String>
+    external fun nativeGetScores(handle: Long): List<Float>
+    external fun nativeGetCounts(handle: Long): List<Int>
+    external fun nativeGetWeights(handle: Long): List<Long>
+    external fun nativeGetValues(handle: Long): List<Double>
+    external fun nativeGetFlags(handle: Long): List<Boolean>
+    external fun nativeGetBytes(handle: Long): List<Byte>
+    external fun nativeGetChunks(handle: Long): List<List<String>>
+
+    // Set variants
+    external fun nativeGetKeySet(handle: Long): Set<String>
+    external fun nativeGetIdSet(handle: Long): Set<Int>
+
+    // Map variants
+    external fun nativeGetMeta(handle: Long): Map<String, String>
+    external fun nativeGetFreqs(handle: Long): Map<String, Int>
+    external fun nativeGetLabels(handle: Long): Map<Int, String>
+
+    // Enum (auto-detected PascalCase)
+    external fun nativeGetStrategy(handle: Long): SamplingStrategy
+    external fun nativeSetStrategy(handle: Long, strategy: SamplingStrategy)
+
+    // Nullable params
+    external fun nativeMaybeInfer(handle: Long?, prompt: String?): String?
+
+    // Void return
     external fun nativeClose(handle: Long)
 }
 """
