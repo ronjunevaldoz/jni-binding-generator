@@ -48,8 +48,8 @@ jobs:
           python3 - <<'EOF'
           import re, os
           changelog = open("CHANGELOG.md").read()
-          # Grab the first H2 section (Unreleased or the newest version)
-          m = re.search(r"^## \[.*?\].*?\n(.*?)(?=^## |\Z)", changelog, re.M | re.S)
+          # Skip [Unreleased]; grab the first versioned H2 section.
+          m = re.search(r"^## \[(?!Unreleased)[^\]]+\].*?\n(.*?)(?=^## |\Z)", changelog, re.M | re.S)
           notes = m.group(1).strip() if m else ""
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"notes<<EOF_NOTES\n{notes}\nEOF_NOTES\n")
