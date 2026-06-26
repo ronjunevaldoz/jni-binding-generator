@@ -114,7 +114,7 @@ python3 scripts/jni-binding-generator.py \
     --ios-cinterop iosApp/src/nativeInterop/cinterop
 ```
 
-See [`examples/kmp-binding/`](examples/kmp-binding/) for a complete working example.
+See [`examples/android-binding/`](examples/android-binding/) for an Android-only project with `build.gradle.kts` and `CMakeLists.txt`, or [`examples/kmp-binding/`](examples/kmp-binding/) for a Kotlin Multiplatform setup.
 
 ## What This Is
 
@@ -190,6 +190,12 @@ jni-binding-generator/
 │   │   └── generated/
 │   │       ├── SampleEngine_jni.gen.cpp
 │   │       └── SampleEngine_jni_test.gen.cpp
+│   ├── android-binding/                # Android-only example (build.gradle.kts + CMakeLists.txt)
+│   │   ├── src/ImageClassifier.kt
+│   │   ├── build.gradle.kts
+│   │   ├── CMakeLists.txt
+│   │   └── generated/
+│   │       └── ImageClassifier_jni.gen.cpp
 │   └── kmp-binding/                    # Kotlin Multiplatform example
 │       ├── shared/src/
 │       │   ├── commonMain/  NativeBridge.kt         (expect class)

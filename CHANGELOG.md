@@ -9,6 +9,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.4] — 2026-06-26
+
+### Added
+- `examples/android-binding/` — Android-only example that was promised in the
+  CHANGELOG but never implemented: `src/ImageClassifier.kt` (7 external funs),
+  `build.gradle.kts` (Gradle `Exec` task wired to `externalNativeBuild`),
+  `CMakeLists.txt`, and the generated `ImageClassifier_jni.gen.cpp`.
+- CI `drift` job now checks `examples/android-binding` alongside the existing
+  sample-binding and kmp-binding drift checks.
+- README examples tree and "See" link updated to include android-binding.
+
+---
+
 ## [1.2.3] — 2026-06-26
 
 ### Fixed

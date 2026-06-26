@@ -87,3 +87,10 @@ jobs:
             --kotlin-source examples/kmp-binding/shared/src/desktopMain/kotlin \
             --output examples/kmp-binding/desktopApp/src/jvmMain/cpp/generated \
             --check
+
+      - name: Check android-binding
+        run: |
+          python3 scripts/jni-binding-generator.py \
+            --kotlin-source examples/android-binding/src/ImageClassifier.kt \
+            --output examples/android-binding/generated \
+            --check
