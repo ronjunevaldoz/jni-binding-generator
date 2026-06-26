@@ -9,6 +9,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.8] — 2026-06-26
+
+### Fixed
+- `test_integration.py`: compile fixture was missing 7 `Array<T>` boxed-array
+  types (`Array<Byte/Boolean/Int/Short/Long/Float/Double>`) and an explicit
+  `Unit` return. All 66 TYPE_MAP entries now have at least one compile-verified
+  stub in the integration test.
+
+---
+
 ## [1.2.7] — 2026-06-26
 
 ### Added

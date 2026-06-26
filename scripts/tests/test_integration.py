@@ -46,8 +46,18 @@ class NewEngine {
         mask: BooleanArray,
     ): ByteArray?
 
-    // Object arrays
+    // Object arrays — Array<String> param (covered above), plus all boxed Array<T>
     external fun nativeBatch(handle: Long, prompts: Array<String>): IntArray
+    external fun nativeBoxedBytes(handle: Long, data: Array<Byte>): Long
+    external fun nativeBoxedBools(handle: Long, flags: Array<Boolean>): Long
+    external fun nativeBoxedInts(handle: Long, ids: Array<Int>): Long
+    external fun nativeBoxedShorts(handle: Long, vals: Array<Short>): Long
+    external fun nativeBoxedLongs(handle: Long, handles: Array<Long>): Long
+    external fun nativeBoxedFloats(handle: Long, weights: Array<Float>): Long
+    external fun nativeBoxedDoubles(handle: Long, scores: Array<Double>): Long
+
+    // Explicit Unit return
+    external fun nativeRelease(handle: Long): Unit
 
     // List variants
     external fun nativeGetTags(handle: Long): List<String>
