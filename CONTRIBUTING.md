@@ -2,55 +2,64 @@
 
 ## Project Status
 
-This project is in **planning phase**. See [docs/JNI_BINDING_GENERATOR_PLAN.md](docs/JNI_BINDING_GENERATOR_PLAN.md) for the full roadmap.
-
-## How to Contribute
-
-### Phase 0: Agent Skill (Planning)
-If this phase proceeds, feedback on the agent skill output is welcome.
-
-### Phase 1: Python Script (Implementation)
-If Phase 1 is approved:
-1. Fork the repo
-2. Create a feature branch
-3. Implement parser, generator, or tests
-4. Add test coverage
-5. Submit a pull request
-
-### Phase 2+: Gradle Integration
-Gradle integration and publishing feedback welcome once Phase 1 is stable.
+The generator is **fully implemented and production-ready.** All phases (parser, code
+generator, Gradle integration, iOS cinterop, CI, docs) are complete. Contributions to
+extend type coverage, add examples, improve docs, or fix bugs are welcome.
 
 ## Development Setup
 
 ```bash
-# Clone the repo
-git clone https://github.com/<you>/jni-binding-generator.git
+git clone https://github.com/ronjunevaldoz/jni-binding-generator.git
 cd jni-binding-generator
 
-# Install Python 3.9+
+# Python 3.9+ required — no extra runtime dependencies
 python3 --version
 
-# Run tests (once implemented)
+# Run the full test suite
 python3 -m pytest scripts/tests/
+
+# Or with unittest discover (same tests, used by CI)
+python3 -m unittest discover -s scripts/tests -v
+
+# Lint + format check
+pip install ruff
+ruff check scripts/
+ruff format --check scripts/
 ```
+
+## Making Changes
+
+1. Fork the repo and create a feature branch
+2. Make your changes — keep them focused; one concern per PR
+3. Add or update tests (`scripts/tests/`) to cover the change
+4. Run the full suite and confirm all 140 tests pass
+5. Run `ruff check scripts/` — no lint errors
+6. If you changed `scripts/jni-binding-generator.py`, re-run the drift check:
+   ```bash
+   python3 scripts/jni-binding-generator.py \
+       --kotlin-source examples/sample-binding/SampleEngine.kt \
+       --output examples/sample-binding/generated \
+       --check
+   ```
+7. Update `CHANGELOG.md` under `[Unreleased]`
+8. Submit a pull request
+
+## Adding a New Type
+
+1. Add the Kotlin type to `TYPE_MAP` in `jni-binding-generator.py`
+2. Add a return entry to `RETURN_MAP`
+3. Add a `_MAKE_HELPER_MAP` entry if a `make_*` helper exists in `jni-utils.h`
+4. Write a test in `scripts/tests/test_generator.py`
+5. Update `docs/type-support-matrix.md`
 
 ## Code Style
 
-- **Python:** PEP 8 (use `black` for formatting)
-- **Kotlin:** ktlint (for Gradle plugin, if implemented)
-- **Comments:** Explain *why*, not *what*
+- **Python:** ruff enforces PEP 8; run `ruff format scripts/` to auto-format
+- **C++ (jni-utils.h):** follow the existing style — inline functions, `snake_case`
+- **Comments:** explain *why*, not *what*; skip obvious comments
 
 ## Reporting Issues
 
-When this project has issues enabled:
 1. Check existing issues first
 2. Include: what you tried, what failed, expected behavior
-3. Attach sample Kotlin code if possible
-
-## Discussions
-
-Ideas, questions, or feedback? Start a discussion or open an issue.
-
----
-
-**Note:** This project is awaiting a go/no-go decision. See the plan for details.
+3. Attach the Kotlin `external fun` declaration that caused the problem

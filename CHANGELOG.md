@@ -9,6 +9,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.5] — 2026-06-26
+
+### Fixed
+- `CONTRIBUTING.md`: rewrote stale content that said the project was "in planning phase"
+  and "awaiting a go/no-go decision" — the project has been fully implemented since v1.0.0.
+  Now accurately describes the development workflow, how to add a new type, and how to run
+  the test suite.
+
+### Changed
+- `.pre-commit-config.yaml`: split single `jni-generator-drift` hook into two
+  (`jni-generator-drift-sample` and `jni-generator-drift-android`) so the android-binding
+  example is also checked on pre-commit, matching what CI already verifies.
+
+---
+
 ## [1.2.4] — 2026-06-26
 
 ### Added

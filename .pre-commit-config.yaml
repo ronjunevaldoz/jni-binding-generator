@@ -24,8 +24,8 @@ repos:
         pass_filenames: false
         files: ^scripts/.*\.(py|h)$
 
-      - id: jni-generator-drift
-        name: jni-generator example up to date
+      - id: jni-generator-drift-sample
+        name: jni-generator sample-binding up to date
         entry: >
           python3 scripts/jni-binding-generator.py
           --kotlin-source examples/sample-binding/SampleEngine.kt
@@ -34,3 +34,14 @@ repos:
         language: system
         pass_filenames: false
         files: ^(scripts/jni-binding-generator\.py|examples/sample-binding/.*)$
+
+      - id: jni-generator-drift-android
+        name: jni-generator android-binding up to date
+        entry: >
+          python3 scripts/jni-binding-generator.py
+          --kotlin-source examples/android-binding/src/ImageClassifier.kt
+          --output examples/android-binding/generated
+          --check
+        language: system
+        pass_filenames: false
+        files: ^(scripts/jni-binding-generator\.py|examples/android-binding/.*)$
