@@ -1118,8 +1118,11 @@ def generate_ios_cinterop_files(
             params_str = ", ".join(params) if params else "void"
             header_lines.append(f"{ret_c} {fn_c}({params_str});")
 
+        header_content = "\n".join(header_lines) + "\n"
         header_path = include_dir / f"{cls}.h"
-        header_path.write_text("\n".join(header_lines) + "\n", encoding="utf-8")
+        header_existing = header_path.read_text(encoding="utf-8") if header_path.exists() else None
+        if header_existing != header_content:
+            header_path.write_text(header_content, encoding="utf-8")
 
         # --- .def file ---
         def_lines = [
@@ -1140,8 +1143,11 @@ def generate_ios_cinterop_files(
             f"# staticLibraries = lib{prefix}.a",
             "# libraryPaths = /path/to/your/lib",
         ]
+        def_content = "\n".join(def_lines) + "\n"
         def_path = output_dir / f"{cls}.def"
-        def_path.write_text("\n".join(def_lines) + "\n", encoding="utf-8")
+        def_existing = def_path.read_text(encoding="utf-8") if def_path.exists() else None
+        if def_existing != def_content:
+            def_path.write_text(def_content, encoding="utf-8")
 
         print(
             f"[cinterop] {kt.name}  ->  {def_path.name}  +  include/{cls}.h"

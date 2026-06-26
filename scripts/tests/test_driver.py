@@ -368,6 +368,57 @@ class TestIosCinterop(DriverTestCase):
         self.assertIn("int64_t", header_text)
         self.assertIn("native_load", header_text)
 
+    def test_ios_cinterop_def_has_headers_line(self):
+        ios_out = self.root / "cinterop"
+        gen.main(
+            [
+                "--kotlin-source",
+                str(self.src),
+                "--output",
+                str(self.out),
+                "--ios-cinterop",
+                str(ios_out),
+            ]
+        )
+        def_text = (ios_out / "SampleEngine.def").read_text()
+        self.assertIn("headers = include/SampleEngine.h", def_text)
+        self.assertIn("headerFilter = include/**", def_text)
+
+    def test_ios_cinterop_def_has_package_comment(self):
+        ios_out = self.root / "cinterop"
+        gen.main(
+            [
+                "--kotlin-source",
+                str(self.src),
+                "--output",
+                str(self.out),
+                "--ios-cinterop",
+                str(ios_out),
+            ]
+        )
+        def_text = (ios_out / "SampleEngine.def").read_text()
+        self.assertIn("SampleEngine", def_text)
+
+    def test_ios_cinterop_incremental(self):
+        ios_out = self.root / "cinterop"
+        args = [
+            "--kotlin-source",
+            str(self.src),
+            "--output",
+            str(self.out),
+            "--ios-cinterop",
+            str(ios_out),
+        ]
+        gen.main(args)
+        def_file = ios_out / "SampleEngine.def"
+        mtime_after_first = def_file.stat().st_mtime
+        gen.main(args)
+        self.assertEqual(
+            def_file.stat().st_mtime,
+            mtime_after_first,
+            "def file was rewritten on second run (should be incremental)",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
