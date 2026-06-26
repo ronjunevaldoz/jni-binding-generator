@@ -130,5 +130,14 @@ python3 scripts/jni-binding-generator.py \
     --check
 ```
 
-Exit code 3 means at least one file has drifted; exit code 0 means all files
-are up to date. No files are written.
+Add `--generate-tests` if you commit the `*_jni_test.gen.cpp` compile-time
+type-check files — the flag also checks those for drift:
+
+```bash
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source core/llama/src/jvmMain \
+    --output native/jni/generated/llama \
+    --check --generate-tests
+```
+
+Exit codes: 0 = up to date, 3 = drift detected. No files are written in either case.

@@ -83,7 +83,7 @@ Linked Native Library (.dylib/.so/.dll)
 
 | Component | Technology | Rationale |
 |---|---|---|
-| Generator logic | Python 3.9+ | Matches existing scripts (release.py, audit); easy AST parsing |
+| Generator logic | Python 3.10+ | Matches existing scripts (release.py, audit); easy AST parsing |
 | Parsing | Regex + manual AST walk | Kotlin `external fun` signatures are simple; no full compiler needed |
 | Build integration | Gradle task (precompiled plugin) | Fits existing build-logic, optional (doesn't block native build) |
 | Agent interface | Claude agent skill | Enables CLI like `/jni-binding-generator` for interactive refinement |
@@ -451,7 +451,7 @@ Test count: 26 (parser, generator, driver, integration).
 
 ### Hard Dependencies
 
-- Python 3.9+ (already available in repo environment)
+- Python 3.10+ (already available in repo environment)
 - Existing Kotlin interfaces must follow convention: `external fun nativeXxx(...): jreturnType`
 - C++ structs must follow naming: `xxxxx_request_t` for request structs
 - CMakeLists.txt must be updated manually to include generated `.hpp` files
@@ -802,7 +802,7 @@ This project is inspired by a working code generator that solves the exact probl
 |---|---|
 | **Scope** | Automate JNI marshalling boilerplate for 3–5+ native C++ bindings |
 | **Effort (MVP)** | 3 weeks, 9–13 days of development |
-| **Language** | Python 3.9+ (scripting language, easy to iterate) |
+| **Language** | Python 3.10+ (scripting language, easy to iterate) |
 | **Deliverables** | Agent skill + Python script + optional Gradle integration + documentation |
 | **First decision gate** | After Phase 0 (agent skill, 2–3 days) |
 | **Risk of parking** | Low — agent skill alone is useful; can stop at Phase 0 without loss |

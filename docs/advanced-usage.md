@@ -254,12 +254,14 @@ forgotten regenerations before they merge.
         --check
 ```
 
-Exit codes from `--check`:
+Exit codes:
 
 | Exit code | Meaning |
 |---|---|
 | 0 | All generated files are up-to-date |
-| 3 | At least one file is missing or has drifted from source |
+| 1 | Usage error (bad path, no `external fun` found, missing `--type-map` file) |
+| 2 | Parse error (unrecognized Kotlin type) |
+| 3 | Drift detected — at least one file is missing or out of date |
 
 `--diff` is the interactive companion — it prints a unified diff of what would
 change without writing anything, useful for local review before committing:
@@ -272,6 +274,71 @@ python3 scripts/jni-binding-generator.py \
 ```
 
 Both flags are read-only and never write files.
+
+### Checking compile-time type-check files (`--check --generate-tests`)
+
+Passing both flags checks that the `*_jni_test.gen.cpp` compile-time type-check
+file is present and up-to-date alongside the main binding. The generator computes
+the expected test content, compares it to the committed file, and exits 3 if the
+file is absent or drifted — without writing anything:
+
+```yaml
+- name: Drift check (bindings + test files)
+  run: |
+    python3 scripts/jni-binding-generator.py \
+        --kotlin-source examples/sample-binding/SampleEngine.kt \
+        --output examples/sample-binding/generated \
+        --check --generate-tests
+```
+
+## Compile-time type-check files (`--generate-tests`)
+
+`--generate-tests` emits a `*_jni_test.gen.cpp` file alongside each binding. Every
+`extract_*` and `make_*` helper call is placed inside an `if (false)` block — the
+compiler verifies types at build time without executing anything:
+
+```bash
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source examples/sample-binding/SampleEngine.kt \
+    --output examples/sample-binding/generated \
+    --generate-tests
+```
+
+Compile the test file with `-fsyntax-only` to catch `jni-utils.h` signature regressions:
+
+```bash
+clang++ -std=c++17 -fsyntax-only \
+    -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin \
+    -Iscripts \
+    examples/sample-binding/generated/SampleEngine_jni_test.gen.cpp
+```
+
+The file is incremental — only rewritten when its content changes.
+
+## Dry-run and verbose (`--dry-run`, `--verbose`)
+
+`--dry-run` prints the generated C++ to stdout with a `[dry-run]` marker and never
+writes files — useful for previewing output or piping into a diff:
+
+```bash
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source src/Engine.kt \
+    --output generated/ \
+    --dry-run
+```
+
+`--verbose` prints each class and function name as it is processed, useful for
+diagnosing which files are being picked up in large source trees:
+
+```bash
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source shared/src/androidMain/kotlin \
+    --output androidApp/src/main/cpp/generated \
+    --verbose
+```
+
+Both flags are read-only; `--dry-run` suppresses all file writes while `--verbose`
+adds extra output but still writes normally.
 
 ## Package filtering (`--package-filter`)
 

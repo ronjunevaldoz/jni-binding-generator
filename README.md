@@ -17,7 +17,7 @@ incremental writes, drift detection, and comprehensive docs.
 | Area | Detail |
 |---|---|
 | **Type coverage** | All Kotlin primitives, `String`, all `*Array` variants, `List<T>`, `Set<T>`, `Map<K,V>`, nested collections, enums |
-| **Tests** | 146 unit tests across 5 suites + compile-check integration test against real JDK headers |
+| **Tests** | 152 unit tests across 5 suites + compile-check integration test against real JDK headers |
 | **Docs** | [Type matrix](docs/type-support-matrix.md) · [Memory management](docs/memory-management.md) · [Unit testing](docs/unit-testing.md) · [Advanced usage](docs/advanced-usage.md) |
 | **CI / hooks** | Pre-commit: ruff lint + unit tests + drift check |
 | **Gradle** | Raw `Exec` task or typed `jniGenerator { bindings { ... } }` convention plugin |
@@ -171,6 +171,9 @@ if (!handle) {
 ```
 jni-binding-generator/
 ├── README.md                           # This file
+├── CHANGELOG.md                        # Version history
+├── CONTRIBUTING.md                     # How to contribute, add types, run tests
+├── ACKNOWLEDGMENTS.md                  # Credits and AI assistance notes
 ├── LICENSE                             # Apache 2.0
 ├── ruff.toml                           # Python linter config (ruff)
 ├── .pre-commit-config.yaml             # Pre-commit: ruff + tests + drift check
@@ -179,7 +182,7 @@ jni-binding-generator/
 │   ├── type-support-matrix.md          # All supported Kotlin types (param/return status)
 │   ├── memory-management.md            # Local-ref contract, make_* ownership, global refs
 │   ├── unit-testing.md                 # Test suites, how to add tests, exit codes
-│   └── advanced-usage.md               # Thread safety, JNI_OnLoad, exceptions, NDK
+│   └── advanced-usage.md               # All CLI flags, thread safety, JNI_OnLoad, exceptions, NDK
 ├── scripts/
 │   ├── jni-binding-generator.py        # Core generator
 │   ├── jni-utils.h                     # C++ marshalling/exception helpers (header-only)

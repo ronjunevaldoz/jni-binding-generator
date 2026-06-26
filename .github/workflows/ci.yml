@@ -73,7 +73,7 @@ jobs:
           python3 scripts/jni-binding-generator.py \
             --kotlin-source examples/sample-binding/SampleEngine.kt \
             --output examples/sample-binding/generated \
-            --check
+            --check --generate-tests
 
       - name: Check kmp-binding androidMain
         run: |

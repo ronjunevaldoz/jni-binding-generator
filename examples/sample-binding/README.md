@@ -32,13 +32,20 @@ verifies types without executing them.
 ```bash
 python3 scripts/jni-binding-generator.py \
     --kotlin-source examples/sample-binding/SampleEngine.kt \
-    --output examples/sample-binding/generated
+    --output examples/sample-binding/generated \
+    --generate-tests
+```
 
-# Also regenerate the type-check file:
+## Drift check
+
+Verify the committed output matches what the generator would produce today
+(used by CI and the pre-commit hook):
+
+```bash
 python3 scripts/jni-binding-generator.py \
     --kotlin-source examples/sample-binding/SampleEngine.kt \
     --output examples/sample-binding/generated \
-    --generate-tests
+    --check --generate-tests
 ```
 
 ## Verify it compiles

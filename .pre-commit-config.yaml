@@ -30,7 +30,7 @@ repos:
           python3 scripts/jni-binding-generator.py
           --kotlin-source examples/sample-binding/SampleEngine.kt
           --output examples/sample-binding/generated
-          --check
+          --check --generate-tests
         language: system
         pass_filenames: false
         files: ^(scripts/jni-binding-generator\.py|examples/sample-binding/.*)$
