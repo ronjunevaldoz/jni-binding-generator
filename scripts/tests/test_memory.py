@@ -353,11 +353,17 @@ _NESTED_HELPERS = [
     "extract_list_list_long",
     "extract_list_list_double",
     "extract_list_list_bool",
+    "extract_list_list_short",
+    "extract_list_list_byte",
+    "extract_list_list_string",
     "make_list_list_int",
     "make_list_list_float",
     "make_list_list_long",
     "make_list_list_double",
     "make_list_list_bool",
+    "make_list_list_short",
+    "make_list_list_byte",
+    "make_list_list_string",
 ]
 
 
