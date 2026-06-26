@@ -1,7 +1,7 @@
 # Unit testing guide
 
 All tests live under `scripts/tests/` and run with Python's built-in `unittest`
-(146 tests across 5 suites). No extra dependencies are required beyond a JDK
+(152 tests across 5 suites). No extra dependencies are required beyond a JDK
 (for the compilation test).
 
 ## Running the tests
@@ -83,14 +83,14 @@ Tests `main()` end-to-end using real temp directories. Covers the full write
 | `TestIncrementalWrites` | First run writes the file; second run with identical content does not touch mtime |
 | `TestCheckMode` | `--check` passes when up-to-date, fails on missing output, fails after source change, never writes |
 | `TestOutputNaming` | Two `Foo` classes in different packages get qualified names (`com_a_Foo_jni.gen.cpp`); unique class keeps short name |
-| `TestGenerateTests` | `--generate-tests` writes `*_jni_test.gen.cpp`, content has correct structure, second run is incremental (mtime unchanged) |
+| `TestGenerateTests` | `--generate-tests` writes `*_jni_test.gen.cpp`, content has correct structure, second run is incremental (mtime unchanged); `--check --generate-tests` detects missing, stale, and up-to-date test files without writing |
 | `TestDryRun` | `--dry-run` prints generated code and `[dry-run]` marker to stdout; never writes files |
 | `TestErrors` | Missing source path → `EXIT_USAGE`; source with no `external fun` → `EXIT_USAGE`; unknown lowercase type → `EXIT_PARSE` with line number and function name in stderr |
 | `TestTypeMap` | `--type-map` JSON injects custom types into the binding; missing file → `EXIT_USAGE` |
 | `TestDiffMode` | `--diff` prints a unified diff but never writes files; reports "unchanged" when output is up-to-date |
 | `TestVerboseMode` | `--verbose` prints class and function names to stdout |
 | `TestPackageFilter` | `--package-filter` restricts output to matching packages; all packages included when flag is absent |
-| `TestIosCinterop` | `--ios-cinterop` writes `.def` and `include/*.h` files; header contains C types; `.def` has `headers`/`headerFilter` lines and package comment; second run is incremental (mtime unchanged) |
+| `TestIosCinterop` | `--ios-cinterop` writes `.def` and `include/*.h` files; header contains C types; `.def` has `headers`/`headerFilter` lines and package comment; second run is incremental (mtime unchanged); `--check` and `--dry-run` never write cinterop files |
 
 ### `test_memory.py` — JNI local-reference static analysis
 

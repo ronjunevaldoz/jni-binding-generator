@@ -590,7 +590,7 @@ def parse_kotlin_source(source: str, filename: str = "") -> ParsedFile:
         lookahead = source[max(0, m.start() - 300) : m.start()]
         jvm_name_match = None
         for candidate in _JVM_NAME_RE.finditer(lookahead):
-            if not re.search(r"\bexternal\s+fun\b", lookahead[candidate.end():]):
+            if not re.search(r"\bexternal\s+fun\b", lookahead[candidate.end() :]):
                 jvm_name_match = candidate
         name = jvm_name_match.group(1) if jvm_name_match else m.group(1)
         line = source.count("\n", 0, m.start()) + 1
@@ -1254,11 +1254,22 @@ def run(
             written += 1
             print(f"{kt}  ->  {out_path}  ({len(parsed.functions)} fn) [written]")
 
-        if generate_tests and not check and not dry_run:
+        if generate_tests and not dry_run:
             test_content = generate_test_file(parsed, kt.name)
             test_path = output_dir / test_output_basename(parsed, qualified)
             test_existing = test_path.read_text(encoding="utf-8") if test_path.exists() else None
-            if test_existing != test_content:
+            if check:
+                test_status = (
+                    "ok"
+                    if test_existing == test_content
+                    else "missing"
+                    if test_existing is None
+                    else "drift"
+                )
+                print(f"[check] {test_path}: {test_status}")
+                if test_existing != test_content:
+                    drifted.append(test_path)
+            elif test_existing != test_content:
                 output_dir.mkdir(parents=True, exist_ok=True)
                 test_path.write_text(test_content, encoding="utf-8")
                 print(f"{kt}  ->  {test_path}  [test written]")
@@ -1375,7 +1386,7 @@ def main(argv=None) -> int:
     if rc != EXIT_OK:
         return rc
 
-    if args.ios_cinterop:
+    if args.ios_cinterop and not args.check and not args.dry_run:
         # Re-collect parsed files (respecting the same package filter) for cinterop output.
         cinterop_files: list[tuple[Path, ParsedFile]] = []
         for kt in collect_kotlin_files(kotlin_source):

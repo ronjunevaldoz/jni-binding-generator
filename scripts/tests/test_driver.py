@@ -135,6 +135,35 @@ class TestGenerateTests(DriverTestCase):
         self.run_gen("--generate-tests")
         self.assertEqual(test_file.stat().st_mtime_ns, before_mtime)
 
+    def test_check_generate_tests_detects_missing_test_file(self):
+        # Generate the main binding but NOT the test file, then check should
+        # report drift because the test file is absent.
+        self.run_gen()
+        rc = self.run_gen("--check", "--generate-tests")
+        self.assertEqual(rc, gen.EXIT_DRIFT)
+
+    def test_check_generate_tests_passes_when_up_to_date(self):
+        # Generate both the binding and the test file, then check should succeed.
+        self.run_gen("--generate-tests")
+        rc = self.run_gen("--check", "--generate-tests")
+        self.assertEqual(rc, gen.EXIT_OK)
+
+    def test_check_generate_tests_detects_stale_test_file(self):
+        # Generate both files, then corrupt the test file — check must report drift.
+        self.run_gen("--generate-tests")
+        test_file = self.out / "SampleEngine_jni_test.gen.cpp"
+        test_file.write_text("// stale content", encoding="utf-8")
+        rc = self.run_gen("--check", "--generate-tests")
+        self.assertEqual(rc, gen.EXIT_DRIFT)
+
+    def test_check_generate_tests_never_writes(self):
+        # --check --generate-tests must never create or modify the test file.
+        self.run_gen()
+        test_file = self.out / "SampleEngine_jni_test.gen.cpp"
+        self.assertFalse(test_file.exists())
+        self.run_gen("--check", "--generate-tests")
+        self.assertFalse(test_file.exists(), "--check must not write the test file")
+
 
 class TestErrors(DriverTestCase):
     def test_missing_source_path_is_usage_error(self):
@@ -456,6 +485,39 @@ class TestIosCinterop(DriverTestCase):
             mtime_after_first,
             "def file was rewritten on second run (should be incremental)",
         )
+
+    def test_check_does_not_write_cinterop_files(self):
+        # Generate the JNI binding first so --check passes (exit 0).
+        ios_out = self.root / "cinterop"
+        self.run_gen()
+        rc = gen.main(
+            [
+                "--kotlin-source",
+                str(self.src),
+                "--output",
+                str(self.out),
+                "--check",
+                "--ios-cinterop",
+                str(ios_out),
+            ]
+        )
+        self.assertEqual(rc, gen.EXIT_OK)
+        self.assertFalse(ios_out.exists(), "--check must not write cinterop files")
+
+    def test_dry_run_does_not_write_cinterop_files(self):
+        ios_out = self.root / "cinterop"
+        gen.main(
+            [
+                "--kotlin-source",
+                str(self.src),
+                "--output",
+                str(self.out),
+                "--dry-run",
+                "--ios-cinterop",
+                str(ios_out),
+            ]
+        )
+        self.assertFalse(ios_out.exists(), "--dry-run must not write cinterop files")
 
 
 if __name__ == "__main__":

@@ -9,6 +9,60 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.8] — 2026-06-26
+
+### Fixed
+- **`--check --ios-cinterop` wrote cinterop files** — `main()` called
+  `generate_ios_cinterop_files()` unconditionally after `run()` returned 0, so
+  `--check` (and `--dry-run`) would still create `.def` and `include/*.h` files
+  when the JNI output was already up to date. Added `not args.check and not
+  args.dry_run` guard. Both flags are now fully read-only as documented.
+- Added 2 regression tests in `TestIosCinterop`:
+  `test_check_does_not_write_cinterop_files` and
+  `test_dry_run_does_not_write_cinterop_files`.
+
+### Changed
+- Test count: 150 → 152
+- `docs/unit-testing.md`: updated `TestIosCinterop` description to include the
+  read-only assertions.
+
+---
+
+## [1.4.7] — 2026-06-26
+
+### Fixed
+- **`--check --generate-tests` silently passed when test file was missing** — the
+  `not check` guard at the generate-tests branch entirely skipped test-file logic
+  during check mode, so `--check --generate-tests` always exited 0 regardless of
+  whether `*_jni_test.gen.cpp` existed or was up to date. The guard is removed;
+  check mode now computes the expected test content and appends the test path to
+  `drifted` if the file is absent or out of date, printing `[check] …: missing` or
+  `[check] …: drift`. Write behavior when `check=False` is unchanged.
+- Added 4 regression tests in `TestGenerateTests` covering missing, stale, up-to-date,
+  and no-write assertions for `--check --generate-tests`.
+
+### Added
+- `docs/advanced-usage.md`: three new sections covering flags that were absent from
+  the doc:
+  - `--generate-tests` — emit `*_jni_test.gen.cpp` compile-time type-check files;
+    includes `--check --generate-tests` combo for CI drift detection of test files.
+  - `--dry-run` — preview generated C++ to stdout without writing files.
+  - `--verbose` — print class and function names during generation.
+  - Exit code table in the `--check` section expanded to all four codes (0/1/2/3).
+- `docs/JNI_BINDING_GENERATOR_PLAN.md`: updated three remaining "Python 3.9+"
+  references to "Python 3.10+".
+- `.github/workflows/ci.yml` / `.pre-commit-config.yaml`: sample-binding drift check
+  now passes `--generate-tests` so the committed `*_jni_test.gen.cpp` is also verified.
+- `gradle-integration/README.md`: added `--check --generate-tests` variant to CI drift
+  section.
+- `examples/sample-binding/README.md`: merged two-step regenerate into one command with
+  `--generate-tests`; added Drift check section.
+
+### Changed
+- Test count: 146 → 150
+
+---
+
 ## [1.4.6] — 2026-06-26
 
 ### Added
