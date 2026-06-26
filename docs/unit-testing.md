@@ -1,7 +1,7 @@
 # Unit testing guide
 
 All tests live under `scripts/tests/` and run with Python's built-in `unittest`
-(58 tests across 4 suites). No extra dependencies are required beyond a JDK
+(113 tests across 5 suites). No extra dependencies are required beyond a JDK
 (for the compilation test).
 
 ## Running the tests
@@ -79,6 +79,27 @@ Tests `main()` end-to-end using real temp directories. Covers the full write
 | `TestOutputNaming` | Two `Foo` classes in different packages get qualified names (`com_a_Foo_jni.gen.cpp`); unique class keeps short name |
 | `TestGenerateTests` | `--generate-tests` writes `*_jni_test.gen.cpp`, content has correct structure, second run is incremental (mtime unchanged) |
 | `TestErrors` | Missing source path → `EXIT_USAGE`; unknown lowercase type → `EXIT_PARSE` with line number and function name in stderr |
+
+### `test_memory.py` — JNI local-reference static analysis
+
+Static-analysis tests over `jni-utils.h` that verify every JNI local-reference
+acquisition is paired with a matching release. No runtime JVM required.
+
+| Class | What it covers |
+|---|---|
+| `TestGetStringUTFCharsLifecycle` | Every `GetStringUTFChars` paired with `ReleaseStringUTFChars` (EP-6) |
+| `TestFindClassBalance` | `DeleteLocalRef` count ≥ `FindClass` count per function |
+| `TestGetObjectArrayElementRelease` | Every `GetObjectArrayElement` result has a matching `DeleteLocalRef` |
+| `TestNewStringUTFInLoop` | `NewStringUTF` inside a loop → `DeleteLocalRef` present |
+| `TestBoxedObjectCreationInLoop` | `CallStaticObjectMethod` inside a loop → `DeleteLocalRef` present |
+| `TestIteratorLoopCleanup` | Iterator-loop functions delete `entry`/key/value and the iterator itself |
+| `TestExtractMakeHelpersHaveCleanup` | Every `extract_*/make_*` that creates local refs has a `DeleteLocalRef` |
+| `TestNestedListHelpers` | All 16 `extract/make_list_list_*` helpers release inner-list refs and class refs |
+| `TestBoxedArrayHelpers` | `extract_boxed_*_array` helpers delete each element ref and the class ref |
+| `TestHeaderPresent` | Smoke test: header exists, is non-empty, and has >20 helpers |
+
+Helpers using `Get*ArrayRegion` (primitive arrays copied into a C buffer, no local ref
+created) are correctly excluded from the `DeleteLocalRef` coverage check.
 
 ### `test_integration.py` — compile check
 

@@ -80,6 +80,29 @@ class NewEngine {
     external fun nativeGetIntLongMap(handle: Long): Map<Int, Long>
     external fun nativeGetIntFloatMap(handle: Long): Map<Int, Float>
     external fun nativeGetIntBoolMap(handle: Long): Map<Int, Boolean>
+    external fun nativeGetIntDoubleMap(handle: Long): Map<Int, Double>
+
+    // Map<String, Double> and Map<Long, *> variants
+    external fun nativeGetScoreMapD(handle: Long): Map<String, Double>
+    external fun nativeGetLongIntMap(handle: Long): Map<Long, Int>
+    external fun nativeGetLongLongMap(handle: Long): Map<Long, Long>
+    external fun nativeGetLongStringMap(handle: Long): Map<Long, String>
+    external fun nativeGetLongFloatMap(handle: Long): Map<Long, Float>
+    external fun nativeGetLongDoubleMap(handle: Long): Map<Long, Double>
+    external fun nativeGetLongBoolMap(handle: Long): Map<Long, Boolean>
+
+    // Set<Byte> and Set<Short>
+    external fun nativeGetByteSet(handle: Long): Set<Byte>
+    external fun nativeGetShortSet(handle: Long): Set<Short>
+
+    // List<List<T>> for all scalar types
+    external fun nativeGetNestedInts(handle: Long): List<List<Int>>
+    external fun nativeGetNestedLongs(handle: Long): List<List<Long>>
+    external fun nativeGetNestedFloats(handle: Long): List<List<Float>>
+    external fun nativeGetNestedDoubles(handle: Long): List<List<Double>>
+    external fun nativeGetNestedBools(handle: Long): List<List<Boolean>>
+    external fun nativeGetNestedShorts(handle: Long): List<List<Short>>
+    external fun nativeGetNestedBytes(handle: Long): List<List<Byte>>
 
     // Enum (auto-detected PascalCase)
     external fun nativeGetStrategy(handle: Long): SamplingStrategy
