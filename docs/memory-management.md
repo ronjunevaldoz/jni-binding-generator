@@ -110,7 +110,7 @@ at CI time. It checks:
 | `TestBoxedObjectCreationInLoop` | `CallStaticObjectMethod` inside a loop → `DeleteLocalRef` present |
 | `TestIteratorLoopCleanup` | Iterator-loop (`hasNextM`) functions delete `entry`/key/value and the iterator itself |
 | `TestExtractMakeHelpersHaveCleanup` | Every `extract_*/make_*` that creates local refs has a `DeleteLocalRef` |
-| `TestNestedListHelpers` | All 10 `extract/make_list_list_*` helpers release inner-list refs and class refs |
+| `TestNestedListHelpers` | All 16 `extract/make_list_list_*` helpers release inner-list refs and class refs |
 | `TestBoxedArrayHelpers` | `extract_boxed_*_array` helpers delete each element ref and the class ref |
 
 Helpers that use `Get*ArrayRegion` (primitive arrays copied into a C buffer without creating
