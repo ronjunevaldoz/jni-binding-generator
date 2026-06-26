@@ -237,6 +237,63 @@ python3 scripts/jni-binding-generator.py \
 See `scripts/tests/test_driver.py::TestTypeMap` for a complete worked example
 with assertions.
 
+## CI drift detection (`--check`, `--diff`)
+
+Commit your generated `.gen.cpp` files alongside the Kotlin sources. Then add a
+CI step that re-runs the generator with `--check` — it exits non-zero if the
+committed output differs from what the generator would produce today, catching
+forgotten regenerations before they merge.
+
+```yaml
+# .github/workflows/ci.yml (excerpt)
+- name: Drift check
+  run: |
+    python3 scripts/jni-binding-generator.py \
+        --kotlin-source examples/sample-binding/SampleEngine.kt \
+        --output examples/sample-binding/generated \
+        --check
+```
+
+Exit codes from `--check`:
+
+| Exit code | Meaning |
+|---|---|
+| 0 | All generated files are up-to-date |
+| 3 | At least one file is missing or has drifted from source |
+
+`--diff` is the interactive companion — it prints a unified diff of what would
+change without writing anything, useful for local review before committing:
+
+```bash
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source src/ \
+    --output generated/ \
+    --diff
+```
+
+Both flags are read-only and never write files.
+
+## Package filtering (`--package-filter`)
+
+In a KMP project the `androidMain` source tree often contains helper classes that
+have no native bindings. Use `--package-filter` to restrict generation to a
+specific package prefix so those files are silently skipped:
+
+```bash
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source shared/src/androidMain/kotlin \
+    --output androidApp/src/main/cpp/generated \
+    --package-filter com.example.engine
+```
+
+The filter is a prefix match — `com.example.engine` matches
+`com.example.engine.SampleEngine` and `com.example.engine.utils.Helper` but not
+`com.example.other.Util`. Kotlin files whose `package` declaration does not match
+are skipped without error.
+
+When the flag is absent, every `external fun` in every discovered `.kt` file is
+included.
+
 ## Unsupported Kotlin constructs
 
 The generator hard-errors on constructs it cannot safely translate:

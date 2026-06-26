@@ -9,6 +9,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.4] — 2026-06-26
+
+### Added
+- `docs/advanced-usage.md`: new `--check` / `--diff` section documenting the CI
+  drift-detection workflow — YAML snippet, exit-code table, and the read-only
+  guarantee for both flags.
+- `docs/advanced-usage.md`: new `--package-filter` section explaining prefix-match
+  semantics and the KMP use case (filtering `androidMain` sources to a specific
+  package).
+
+---
+
 ## [1.3.3] — 2026-06-26
 
 ### Added
