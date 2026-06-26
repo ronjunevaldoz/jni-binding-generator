@@ -30,6 +30,14 @@ changes, so unchanged outputs keep their mtime and don't trigger rebuilds.
 exits non-zero on drift (for CI / pre-commit).
 
 Exit codes: 0 ok, 1 usage/no input, 2 parse or type error, 3 drift (--check).
+
+Known limitations (by design — the generator assumes one declaration style per
+class and the conventional ``external fun nativeXxx`` shape):
+  * Static-ness is determined per file (``object`` / ``companion object``), not
+    per function. Mixing companion-object and instance ``external fun`` in one
+    class is not supported — split them into separate declarations.
+  * Overloaded ``external fun`` names emit the short ``Java_*`` symbol and would
+    collide; give native methods unique names (the usual JNI convention).
 """
 
 from __future__ import annotations
@@ -101,6 +109,10 @@ RETURN_MAP = {
 
 class UnknownTypeError(ValueError):
     """Raised when a Kotlin type has no mapping. The message is actionable."""
+
+
+def _is_nullable(kotlin_type: str) -> bool:
+    return kotlin_type.strip().endswith("?")
 
 
 def map_param_type(kotlin_type: str) -> TypeInfo:
@@ -316,9 +328,13 @@ def generate_function(parsed: ParsedFile, func: ExternalFunction) -> str:
         lines.append(f"    {info.cpp_type} {var} = {expr};")
         marshalled.append((p, info, var))
 
-    # Error handling
+    # Error handling. Nullable parameters (e.g. `String?`, `Long?`) are allowed
+    # to be null/empty, so they get no required-value guard — null flows to the
+    # hand-written body.
     checks: List[str] = []
     for p, info, var in marshalled:
+        if _is_nullable(p.kotlin_type):
+            continue
         if info.is_handle:
             checks.append(
                 f"    if (!{var}) {{\n"
@@ -387,6 +403,19 @@ def collect_kotlin_files(source: Path) -> List[Path]:
     return sorted(source.rglob("*.kt"))
 
 
+def output_basename(parsed: ParsedFile, qualified: bool) -> str:
+    """Output file name for a parsed source.
+
+    When two classes share a simple name (e.g. ``com.a.Foo`` and ``com.b.Foo``)
+    the name is package-qualified to avoid silently overwriting one with the
+    other; otherwise the short ``<Class>_jni.gen.cpp`` form is used.
+    """
+    if qualified and parsed.package:
+        prefix = parsed.package.replace(".", "_") + "_"
+        return f"{prefix}{parsed.class_name}_jni.gen.cpp"
+    return f"{parsed.class_name}_jni.gen.cpp"
+
+
 # Exit codes
 EXIT_OK = 0
 EXIT_USAGE = 1       # no files / nothing to generate / bad path
@@ -400,21 +429,35 @@ def run(kotlin_source: Path, output_dir: Path, dry_run: bool, check: bool) -> in
         print(f"No .kt files found under {kotlin_source}", file=sys.stderr)
         return EXIT_USAGE
 
+    # Pre-pass: parse every file so we can detect class-name collisions before
+    # choosing output names.
+    parsed_files: List[Tuple[Path, ParsedFile]] = []
+    for kt in files:
+        try:
+            parsed = parse_kotlin_file(kt)
+        except ValueError as exc:
+            print(f"Error in {kt}: {exc}", file=sys.stderr)
+            return EXIT_PARSE
+        if parsed.functions:
+            parsed_files.append((kt, parsed))
+
+    name_counts: dict = {}
+    for _, parsed in parsed_files:
+        name_counts[parsed.class_name] = name_counts.get(parsed.class_name, 0) + 1
+
     generated = 0       # files with external funs (work items)
     written = 0         # files actually written this run
     drifted: List[Path] = []
 
-    for kt in files:
-        parsed = parse_kotlin_file(kt)
-        if not parsed.functions:
-            continue
+    for kt, parsed in parsed_files:
         try:
             content = generate_file(parsed, kt.name)
         except (UnknownTypeError, ValueError) as exc:
             print(f"Error in {kt}: {exc}", file=sys.stderr)
             return EXIT_PARSE
 
-        out_path = output_dir / f"{parsed.class_name}_jni.gen.cpp"
+        qualified = name_counts[parsed.class_name] > 1
+        out_path = output_dir / output_basename(parsed, qualified)
         existing = out_path.read_text(encoding="utf-8") if out_path.exists() else None
         up_to_date = existing == content
         generated += 1

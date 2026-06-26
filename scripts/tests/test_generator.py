@@ -85,6 +85,28 @@ class TestGeneration(unittest.TestCase):
         self.assertIn("WeirdType", str(ctx.exception))
         self.assertIn("TYPE_MAP", str(ctx.exception))
 
+    def test_nullable_params_skip_required_guards(self):
+        parsed = gen.parse_kotlin_source(
+            "package a.b\nclass N {\n"
+            "    external fun f(handle: Long?, name: String?): Long\n}"
+        )
+        out = gen.generate_function(parsed, parsed.functions[0])
+        # Nullable params are still marshalled...
+        self.assertIn("void* handle_ptr = reinterpret_cast<void*>(handle);", out)
+        self.assertIn("std::string name_val = jstring2string(env, name);", out)
+        # ...but get no required-value guard.
+        self.assertNotIn("not initialized", out)
+        self.assertNotIn("is required", out)
+
+    def test_non_nullable_still_guarded(self):
+        parsed = gen.parse_kotlin_source(
+            "package a.b\nclass N {\n"
+            "    external fun f(handle: Long, name: String): Long\n}"
+        )
+        out = gen.generate_function(parsed, parsed.functions[0])
+        self.assertIn("not initialized", out)
+        self.assertIn("is required", out)
+
     def test_full_file_has_header_and_includes(self):
         content = gen.generate_file(self.parsed, "SampleEngine.kt")
         self.assertIn("AUTO-GENERATED", content)

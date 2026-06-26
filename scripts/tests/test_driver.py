@@ -91,6 +91,33 @@ class TestCheckMode(DriverTestCase):
         self.assertFalse((self.out / "SampleEngine_jni.gen.cpp").exists())
 
 
+class TestOutputNaming(DriverTestCase):
+    def test_same_class_name_different_packages_no_collision(self):
+        multi = self.root / "multi"
+        a = multi / "a"
+        b = multi / "b"
+        a.mkdir(parents=True)
+        b.mkdir(parents=True)
+        (a / "Foo.kt").write_text(
+            "package com.a\nclass Foo { external fun nativeX(h: Long) }",
+            encoding="utf-8",
+        )
+        (b / "Foo.kt").write_text(
+            "package com.b\nclass Foo { external fun nativeY(h: Long) }",
+            encoding="utf-8",
+        )
+        rc = gen.main(["--kotlin-source", str(multi), "--output", str(self.out)])
+        self.assertEqual(rc, gen.EXIT_OK)
+        names = sorted(p.name for p in self.out.glob("*.gen.cpp"))
+        self.assertEqual(
+            names, ["com_a_Foo_jni.gen.cpp", "com_b_Foo_jni.gen.cpp"]
+        )
+
+    def test_unique_class_uses_short_name(self):
+        self.run_gen()  # single SampleEngine
+        self.assertTrue((self.out / "SampleEngine_jni.gen.cpp").exists())
+
+
 class TestErrors(DriverTestCase):
     def test_missing_source_path_is_usage_error(self):
         rc = gen.main(
@@ -99,15 +126,22 @@ class TestErrors(DriverTestCase):
         self.assertEqual(rc, gen.EXIT_USAGE)
 
     def test_unknown_type_reports_line_and_function(self):
-        (self.src / "N.kt").write_text(BAD_SOURCE, encoding="utf-8")
-        # Generate just the bad file to a fresh dir and capture the exit code.
+        import io
+        from contextlib import redirect_stderr
+
         bad_dir = self.root / "badsrc"
         bad_dir.mkdir()
         (bad_dir / "N.kt").write_text(BAD_SOURCE, encoding="utf-8")
-        rc = gen.main(
-            ["--kotlin-source", str(bad_dir), "--output", str(self.root / "bo")]
-        )
+        buf = io.StringIO()
+        with redirect_stderr(buf):
+            rc = gen.main(
+                ["--kotlin-source", str(bad_dir), "--output", str(self.root / "bo")]
+            )
         self.assertEqual(rc, gen.EXIT_PARSE)
+        err = buf.getvalue()
+        self.assertIn("line 6", err)   # `external fun bad(` is on line 6
+        self.assertIn("bad()", err)
+        self.assertIn("WeirdType", err)
 
     def test_line_number_is_accurate(self):
         parsed = gen.parse_kotlin_source(BAD_SOURCE)

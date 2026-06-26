@@ -24,13 +24,15 @@ tasks.register<Exec>("generateJniBindings") {
 
     val kotlinSource = layout.projectDirectory.dir("../core/llama/src/jvmMain")
     val outputDir = layout.projectDirectory.dir("native/jni/generated/llama")
+    val script = layout.projectDirectory.file("../scripts/jni-binding-generator.py")
 
+    inputs.file(script)          // re-run when the generator itself changes
     inputs.dir(kotlinSource)
     outputs.dir(outputDir)
 
     commandLine(
         "python3",
-        "$rootDir/scripts/jni-binding-generator.py",
+        script.asFile.absolutePath,
         "--kotlin-source", kotlinSource.asFile.absolutePath,
         "--output", outputDir.asFile.absolutePath,
     )

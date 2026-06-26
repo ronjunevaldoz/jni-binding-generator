@@ -33,7 +33,12 @@ import org.gradle.api.tasks.Exec
 abstract class JniBindingSpec(private val specName: String) : Named {
     override fun getName(): String = specName
 
-    /** Kotlin file or source directory containing `external fun` declarations. */
+    /**
+     * Source **directory** containing `external fun` declarations (scanned
+     * recursively). The generator's CLI also accepts a single `.kt` file; if
+     * you need that, use the raw `Exec` task in the README instead, which can
+     * point `--kotlin-source` at a file.
+     */
     abstract val kotlinSource: DirectoryProperty
 
     /** Directory where generated `*_jni.gen.cpp` files are written. */
@@ -66,6 +71,8 @@ ext.bindings.all {
         group = "jni"
         description = "Generate C++ JNI bindings for '${binding.name}'"
 
+        // Track the generator script too, so edits to it re-run the task.
+        inputs.file(ext.generatorScript).withPropertyName("generatorScript")
         inputs.dir(binding.kotlinSource).withPropertyName("kotlinSource")
         outputs.dir(binding.outputDir).withPropertyName("outputDir")
 
