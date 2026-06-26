@@ -9,6 +9,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.3] — 2026-06-26
+
+### Added
+- `docs/advanced-usage.md`: new `--ios-cinterop` section with full command
+  example, annotated `.def` and `.h` output, and a step-by-step integration
+  guide. The flag was previously documented only in the README one-liner.
+
+---
+
 ## [1.3.2] — 2026-06-26
 
 ### Fixed
