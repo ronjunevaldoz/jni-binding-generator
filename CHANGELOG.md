@@ -9,6 +9,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.0] — 2026-06-26
+
+### Changed
+- **Modularized `scripts/jni-binding-generator.py`** — the 1,409-line monolith
+  is split into six focused modules:
+  - `scripts/_models.py` — `Param`, `ExternalFunction`, `ParsedFile`, exit constants
+  - `scripts/_types.py` — `TypeInfo`, `TYPE_MAP`, `RETURN_MAP`, `_MAKE_HELPER_MAP`,
+    type-mapping helpers, `load_type_map`
+  - `scripts/_parser.py` — Kotlin parsing, `mangle`, `jni_function_name`
+  - `scripts/_generator.py` — C++ code generation, output naming
+  - `scripts/_ios.py` — iOS/Kotlin-Native cinterop skeleton generation
+  - `scripts/_driver.py` — `run()`, `parse_args()`, `main()`, `collect_kotlin_files()`
+- `scripts/jni-binding-generator.py` is now a 60-line entry point that patches
+  `sys.path` and re-exports every public symbol, so all existing tests and the
+  `__init__.py` pip shim remain unchanged.
+- Pre-commit drift hooks updated to trigger on any `scripts/_*.py` change, not
+  only on `scripts/jni-binding-generator.py`.
+- `ruff.toml` — added `[lint.per-file-ignores]` to suppress `E402` for the entry
+  point (imports must follow the `sys.path` patch).
+- `CONTRIBUTING.md` and `docs/type-support-matrix.md` — "Adding a New Type"
+  instructions now point to `scripts/_types.py`.
+- `README.md` — repository structure tree updated to list all six new modules.
+
+---
+
 ## [1.4.8] — 2026-06-26
 
 ### Fixed

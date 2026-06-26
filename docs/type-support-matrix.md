@@ -154,10 +154,10 @@ All supported types accept a `?` suffix. The effect:
 
 ## Adding a new type
 
-1. Add a `TypeInfo` entry to `TYPE_MAP` in `jni-binding-generator.py`
-2. Add a matching entry to `RETURN_MAP`
+1. Add a `TypeInfo` entry to `TYPE_MAP` in `scripts/_types.py`
+2. Add a matching entry to `RETURN_MAP` in `scripts/_types.py`
 3. Add `extract_*` (param) and/or `make_*` (return) helpers to `jni-utils.h`
-4. Add a `_MAKE_HELPER_MAP` entry pointing to the new `make_*` helper
+4. Add a `_MAKE_HELPER_MAP` entry in `scripts/_types.py` pointing to the new `make_*` helper
 5. Write a test in `scripts/tests/test_generator.py`
 6. Update this file
 

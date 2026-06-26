@@ -184,7 +184,13 @@ jni-binding-generator/
 │   ├── unit-testing.md                 # Test suites, how to add tests, exit codes
 │   └── advanced-usage.md               # All CLI flags, thread safety, JNI_OnLoad, exceptions, NDK
 ├── scripts/
-│   ├── jni-binding-generator.py        # Core generator
+│   ├── jni-binding-generator.py        # Entry point + public re-exports
+│   ├── _models.py                      # Param, ExternalFunction, ParsedFile, exit constants
+│   ├── _types.py                       # TypeInfo, TYPE_MAP, RETURN_MAP, type helpers
+│   ├── _parser.py                      # Kotlin parsing, JNI name mangling
+│   ├── _generator.py                   # C++ code generation
+│   ├── _ios.py                         # iOS/Kotlin-Native cinterop generation
+│   ├── _driver.py                      # CLI driver: run(), parse_args(), main()
 │   ├── jni-utils.h                     # C++ marshalling/exception helpers (header-only)
 │   └── tests/
 │       ├── test_parser.py              # Parser + JNI name-mangling tests

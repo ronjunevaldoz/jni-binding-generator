@@ -12,3 +12,8 @@ select = [
 ignore = [
     "E501",  # line too long — ruff-format handles wrapping
 ]
+
+[lint.per-file-ignores]
+# jni-binding-generator.py must patch sys.path before importing its own submodules,
+# so imports after the sys.path block unavoidably trigger E402.
+"scripts/jni-binding-generator.py" = ["E402"]

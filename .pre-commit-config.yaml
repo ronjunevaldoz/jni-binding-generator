@@ -33,7 +33,7 @@ repos:
           --check --generate-tests
         language: system
         pass_filenames: false
-        files: ^(scripts/jni-binding-generator\.py|examples/sample-binding/.*)$
+        files: ^(scripts/(jni-binding-generator|_driver|_generator|_ios|_models|_parser|_types)\.py|examples/sample-binding/.*)$
 
       - id: jni-generator-drift-android
         name: jni-generator android-binding up to date
@@ -44,7 +44,7 @@ repos:
           --check
         language: system
         pass_filenames: false
-        files: ^(scripts/jni-binding-generator\.py|examples/android-binding/.*)$
+        files: ^(scripts/(jni-binding-generator|_driver|_generator|_ios|_models|_parser|_types)\.py|examples/android-binding/.*)$
 
       - id: jni-generator-drift-kmp-android
         name: jni-generator kmp-binding androidMain up to date
@@ -55,7 +55,7 @@ repos:
           --check
         language: system
         pass_filenames: false
-        files: ^(scripts/jni-binding-generator\.py|examples/kmp-binding/.*)$
+        files: ^(scripts/(jni-binding-generator|_driver|_generator|_ios|_models|_parser|_types)\.py|examples/kmp-binding/.*)$
 
       - id: jni-generator-drift-kmp-desktop
         name: jni-generator kmp-binding desktopMain up to date
@@ -66,4 +66,4 @@ repos:
           --check
         language: system
         pass_filenames: false
-        files: ^(scripts/jni-binding-generator\.py|examples/kmp-binding/.*)$
+        files: ^(scripts/(jni-binding-generator|_driver|_generator|_ios|_models|_parser|_types)\.py|examples/kmp-binding/.*)$
