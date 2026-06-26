@@ -54,6 +54,9 @@ from _parser import mangle as mangle
 from _parser import parse_kotlin_file as parse_kotlin_file
 from _parser import parse_kotlin_source as parse_kotlin_source
 from _parser import parse_kotlin_source_multi as parse_kotlin_source_multi
+from _scorer import ScoreCard as ScoreCard
+from _scorer import print_scorecard as print_scorecard
+from _scorer import score as score
 from _types import _MAKE_HELPER_MAP as _MAKE_HELPER_MAP
 from _types import RETURN_MAP as RETURN_MAP
 from _types import TYPE_MAP as TYPE_MAP

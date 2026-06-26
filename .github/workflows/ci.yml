@@ -30,6 +30,14 @@ jobs:
       - name: Format check
         run: ruff format --check scripts/
 
+      - name: clang-format check (jni-utils.h)
+        run: |
+          if command -v clang-format &>/dev/null; then
+            clang-format --dry-run --Werror scripts/jni-utils.h
+          else
+            echo "clang-format not installed — skipping (install with: brew install clang-format)"
+          fi
+
   test:
     name: Tests + generated-code compile (${{ matrix.os }}, py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
@@ -103,3 +111,14 @@ jobs:
             --kotlin-source examples/android-binding/src/ImageClassifier.kt \
             --output examples/android-binding/generated \
             --check
+
+      - name: Strict-types check (no unmapped TODO types in examples)
+        run: |
+          python3 scripts/jni-binding-generator.py \
+            --kotlin-from-header examples/android-binding/include/image_classifier.h \
+            --output examples/android-binding/src \
+            --kotlin-package com.example.android.classifier \
+            --strict-types --dry-run
+
+      - name: Quality scorecard
+        run: python3 scripts/jni-binding-generator.py --score

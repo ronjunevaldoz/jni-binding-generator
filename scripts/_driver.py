@@ -163,7 +163,7 @@ def parse_args(argv=None):
     )
     parser.add_argument(
         "--output",
-        required=True,
+        default=None,
         help="Output directory for generated files",
     )
     parser.add_argument(
@@ -220,6 +220,17 @@ def parse_args(argv=None):
         metavar="DIR",
         help="Also generate a Kotlin/Native cinterop .def + C header skeleton in DIR",
     )
+    parser.add_argument(
+        "--strict-types",
+        action="store_true",
+        help="Exit with an error if any type cannot be mapped (no TODO placeholders). "
+        "Useful in CI to catch unmapped types early.",
+    )
+    parser.add_argument(
+        "--score",
+        action="store_true",
+        help="Print a quality scorecard for generated files and exit.",
+    )
     return parser.parse_args(argv)
 
 
@@ -234,12 +245,17 @@ def _main_kotlin_from_header(args) -> int:
 
     obj_name = _header_to_object_name(header_path)
     source = header_path.read_text(encoding="utf-8")
-    content = generate_kotlin_stubs(
-        source=source,
-        source_name=header_path.name,
-        package=args.kotlin_package,
-        object_name=obj_name,
-    )
+    try:
+        content = generate_kotlin_stubs(
+            source=source,
+            source_name=header_path.name,
+            package=args.kotlin_package,
+            object_name=obj_name,
+            strict_types=getattr(args, "strict_types", False),
+        )
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return EXIT_PARSE
     if not content:
         print(f"No function declarations found in {header_path}", file=sys.stderr)
         return EXIT_USAGE
@@ -274,8 +290,38 @@ def _main_kotlin_from_header(args) -> int:
     return EXIT_OK
 
 
+def _main_score(args) -> int:
+    """Print a quality scorecard for all generated files found under standard paths."""
+    from _scorer import print_scorecard, score
+
+    generated_dirs = [
+        Path("examples/sample-binding/generated"),
+        Path("examples/kmp-binding/androidApp/src/main/cpp/generated"),
+        Path("examples/kmp-binding/desktopApp/src/jvmMain/cpp/generated"),
+        Path("examples/android-binding/generated"),
+    ]
+    kotlin_dirs = [
+        Path("examples/android-binding/src"),
+    ]
+    existing_gen = [d for d in generated_dirs if d.exists()]
+    existing_kt = [d for d in kotlin_dirs if d.exists()]
+    if not existing_gen and not existing_kt:
+        print("No generated directories found. Run the generator first.", file=sys.stderr)
+        return EXIT_USAGE
+    card = score(existing_gen, existing_kt)
+    print_scorecard(card)
+    return EXIT_OK
+
+
 def main(argv=None) -> int:
     args = parse_args(argv)
+
+    if args.score:
+        return _main_score(args)
+
+    if not args.output:
+        print("Error: --output is required", file=sys.stderr)
+        return EXIT_USAGE
 
     # Reverse mode: C header → Kotlin stubs
     if args.kotlin_from_header:

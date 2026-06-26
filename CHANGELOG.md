@@ -9,6 +9,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.6.0] — 2026-06-26
+
+### Added
+- **`CLAUDE.md`** — project context file for AI-assisted development: key commands,
+  architecture map, invariants, versioning rules, and the type-adding checklist.
+- **`--strict-types` flag** — `--kotlin-from-header` now accepts `--strict-types` to
+  exit `EXIT_PARSE` if any C type cannot be mapped (no silent TODO placeholders).
+  Useful in CI to catch unmapped types before they reach production.
+- **`--score` flag** — prints a quality scorecard across all generated files (type
+  coverage, null-safety, string-safety, strict-clean; weighted overall out of 100).
+  Current examples score 100/100.
+- **`.clang-format`** — Google-based style config for `jni-utils.h`; CI step added
+  (soft-fail when `clang-format` is not installed).
+- **`/jni-add-type` skill** — user-level Claude skill that walks through all 6 steps
+  required to add a new type mapping, including the null-guard invariant reminder.
+- **EP-6b regression guard** (`test_memory.py`) — `TestJniUtilsQuality` asserts that
+  every `NewObject` call in `jni-utils.h` is immediately followed by a null-check,
+  preventing future helpers from omitting the guard.
+
+---
+
 ## [1.5.5] — 2026-06-26
 
 ### Fixed

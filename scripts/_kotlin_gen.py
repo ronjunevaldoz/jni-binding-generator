@@ -285,11 +285,26 @@ def generate_kotlin_stubs(
     source_name: str,
     package: str = "",
     object_name: str = "",
+    strict_types: bool = False,
 ) -> str:
     """Generate a .kt file content with external fun stubs for each C declaration."""
     funs = parse_c_header(source)
     if not funs:
         return ""
+
+    if strict_types:
+        unmapped: list[str] = []
+        for fun in funs:
+            for p in fun.params:
+                if "/* TODO:" in p.kotlin_type:
+                    unmapped.append(f"  {fun.c_name}(): param '{p.name}' → {p.c_type}")
+            if "/* TODO:" in fun.return_type:
+                unmapped.append(f"  {fun.c_name}(): return → {fun.c_return}")
+        if unmapped:
+            detail = "\n".join(unmapped)
+            raise ValueError(
+                f"--strict-types: {len(unmapped)} unmapped type(s) in {source_name}:\n{detail}"
+            )
 
     pkg = package if package else "/* TODO: set your package */"
     lib = re.sub(r"[^a-zA-Z0-9_]", "", object_name.lower()) or "native"

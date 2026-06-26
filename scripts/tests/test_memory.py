@@ -486,5 +486,30 @@ class TestHeaderPresent(unittest.TestCase):
         self.assertGreater(len(helpers), 20, "Expected > 20 extract_*/make_* helpers")
 
 
+class TestJniUtilsQuality(unittest.TestCase):
+    """Regression guards for EP-6b/6c: every NewObject must be null-checked."""
+
+    def test_new_object_null_guard(self):
+        lines = _read().splitlines()
+        for i, line in enumerate(lines):
+            if "= env->NewObject(" not in line:
+                continue
+            # Extract variable name from "    jobject <name> = env->NewObject("
+            m = re.match(r"\s+jobject (\w+)\s*= env->NewObject\(", line)
+            if not m:
+                continue
+            var = m.group(1)
+            # Next non-blank line must contain the null-check
+            for j in range(i + 1, min(i + 4, len(lines))):
+                if lines[j].strip():
+                    self.assertIn(
+                        f"if (!{var})",
+                        lines[j],
+                        f"jni-utils.h line {i + 1}: NewObject result '{var}' has no "
+                        f"null-check on line {j + 1} — add `if (!{var}) return nullptr;`",
+                    )
+                    break
+
+
 if __name__ == "__main__":
     unittest.main()
