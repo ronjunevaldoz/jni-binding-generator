@@ -79,6 +79,11 @@ For return types the generated TODO body includes a comment like:
 | `Map<String, Float>`     | ✅ | ✅ | `std::unordered_map<std::string, float>`       | `jobject` | `extract_map_string_float` / `make_map_string_float`   |
 | `Map<String, Boolean>`   | ✅ | ✅ | `std::unordered_map<std::string, bool>`        | `jobject` | `extract_map_string_bool` / `make_map_string_bool`     |
 | `Map<Int, String>`       | ✅ | ✅ | `std::unordered_map<int32_t, std::string>`     | `jobject` | `extract_map_int_string` / `make_map_int_string`       |
+| `Map<Long, Int>`         | ✅ | ✅ | `std::unordered_map<int64_t, int32_t>`         | `jobject` | `extract_map_long_int` / `make_map_long_int`           |
+| `Map<Long, Long>`        | ✅ | ✅ | `std::unordered_map<int64_t, int64_t>`         | `jobject` | `extract_map_long_long` / `make_map_long_long`         |
+| `Map<Long, String>`      | ✅ | ✅ | `std::unordered_map<int64_t, std::string>`     | `jobject` | `extract_map_long_string` / `make_map_long_string`     |
+| `Map<Long, Float>`       | ✅ | ✅ | `std::unordered_map<int64_t, float>`           | `jobject` | `extract_map_long_float` / `make_map_long_float`       |
+| `Map<Long, Boolean>`     | ✅ | ✅ | `std::unordered_map<int64_t, bool>`            | `jobject` | `extract_map_long_bool` / `make_map_long_bool`         |
 
 ## Complex types (not supported)
 

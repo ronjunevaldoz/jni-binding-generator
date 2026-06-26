@@ -234,6 +234,31 @@ class TestNewTypeFamily(unittest.TestCase):
         self.assertIn("extract_map_string_bool(env, x)", out)
         self.assertIn("make_map_string_bool", out)
 
+    def test_map_long_int_param_and_return(self):
+        out = self._gen("Map<Long, Int>")
+        self.assertIn("extract_map_long_int(env, x)", out)
+        self.assertIn("make_map_long_int", out)
+
+    def test_map_long_long_param_and_return(self):
+        out = self._gen("Map<Long, Long>")
+        self.assertIn("extract_map_long_long(env, x)", out)
+        self.assertIn("make_map_long_long", out)
+
+    def test_map_long_string_param_and_return(self):
+        out = self._gen("Map<Long, String>")
+        self.assertIn("extract_map_long_string(env, x)", out)
+        self.assertIn("make_map_long_string", out)
+
+    def test_map_long_float_param_and_return(self):
+        out = self._gen("Map<Long, Float>")
+        self.assertIn("extract_map_long_float(env, x)", out)
+        self.assertIn("make_map_long_float", out)
+
+    def test_map_long_bool_param_and_return(self):
+        out = self._gen("Map<Long, Boolean>")
+        self.assertIn("extract_map_long_bool(env, x)", out)
+        self.assertIn("make_map_long_bool", out)
+
 
 class TestNestedListLongDoubleBoolean(unittest.TestCase):
     def _gen(self, kt_type: str) -> str:
@@ -265,6 +290,22 @@ class TestNestedListLongDoubleBoolean(unittest.TestCase):
     def test_list_list_bool_return(self):
         out = self._gen("List<List<Boolean>>")
         self.assertIn("make_list_list_bool", out)
+
+
+class TestNestedListString(unittest.TestCase):
+    def _gen(self, kt_type: str) -> str:
+        parsed = gen.parse_kotlin_source(
+            f"package a\nclass N {{\n    external fun f(x: {kt_type}): {kt_type}\n}}"
+        )
+        return gen.generate_file(parsed, "N.kt")
+
+    def test_list_list_string_param(self):
+        out = self._gen("List<List<String>>")
+        self.assertIn("extract_list_list_string(env, x)", out)
+
+    def test_list_list_string_return(self):
+        out = self._gen("List<List<String>>")
+        self.assertIn("make_list_list_string", out)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- `Map<Long, Int/Long/String/Float/Boolean>` type family — 5 new Kotlin types mapping to
+  `std::unordered_map<int64_t, *>` with `extract_map_long_*` / `make_map_long_*` helpers
+- `scripts/tests/test_memory.py` — 17 static-analysis tests (612 subtests) verifying that
+  every JNI local-reference acquisition in `jni-utils.h` has a matching release (EP-6,
+  `FindClass`/`DeleteLocalRef` balance, iterator-loop cleanup, boxed object release)
+- `docs/memory-management.md` — automated-tests table and per-helper leak status for all
+  helpers in `jni-utils.h` (audited clean 2026-06-26)
+- Tests for `List<List<String>>` param/return (type existed, coverage was missing)
+- Tests for all 5 `Map<Long, *>` variants
+
+### Previously added
 - `--diff` flag — prints a unified diff of what would change without writing files
 - `--type-map FILE` flag — loads custom Kotlin→JNI type mappings from a JSON file
 - Multi-class support: a single `.kt` file with multiple `class`/`object` declarations now produces one binding file per class (`parse_kotlin_source_multi`)

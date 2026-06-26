@@ -230,6 +230,31 @@ TYPE_MAP = {
         "std::unordered_map<int32_t, bool>",
         "extract_map_int_bool({env}, {var})",
     ),
+    "Map<Long, Int>": TypeInfo(
+        "jobject",
+        "std::unordered_map<int64_t, int32_t>",
+        "extract_map_long_int({env}, {var})",
+    ),
+    "Map<Long, Long>": TypeInfo(
+        "jobject",
+        "std::unordered_map<int64_t, int64_t>",
+        "extract_map_long_long({env}, {var})",
+    ),
+    "Map<Long, String>": TypeInfo(
+        "jobject",
+        "std::unordered_map<int64_t, std::string>",
+        "extract_map_long_string({env}, {var})",
+    ),
+    "Map<Long, Float>": TypeInfo(
+        "jobject",
+        "std::unordered_map<int64_t, float>",
+        "extract_map_long_float({env}, {var})",
+    ),
+    "Map<Long, Boolean>": TypeInfo(
+        "jobject",
+        "std::unordered_map<int64_t, bool>",
+        "extract_map_long_bool({env}, {var})",
+    ),
     "Unit": TypeInfo("void", "void", None),
 }
 
@@ -288,6 +313,11 @@ RETURN_MAP = {
     "Map<Int, Long>": ("jobject", "nullptr"),
     "Map<Int, Float>": ("jobject", "nullptr"),
     "Map<Int, Boolean>": ("jobject", "nullptr"),
+    "Map<Long, Int>": ("jobject", "nullptr"),
+    "Map<Long, Long>": ("jobject", "nullptr"),
+    "Map<Long, String>": ("jobject", "nullptr"),
+    "Map<Long, Float>": ("jobject", "nullptr"),
+    "Map<Long, Boolean>": ("jobject", "nullptr"),
     "Unit": ("void", ""),
     None: ("void", ""),
 }
@@ -744,6 +774,11 @@ _MAKE_HELPER_MAP: dict[str, tuple[str, str]] = {
     "Map<String, Float>": ("make_map_string_float", "std::unordered_map<std::string, float>"),
     "Map<String, Boolean>": ("make_map_string_bool", "std::unordered_map<std::string, bool>"),
     "Map<Int, String>": ("make_map_int_string", "std::unordered_map<int32_t, std::string>"),
+    "Map<Long, Int>": ("make_map_long_int", "std::unordered_map<int64_t, int32_t>"),
+    "Map<Long, Long>": ("make_map_long_long", "std::unordered_map<int64_t, int64_t>"),
+    "Map<Long, String>": ("make_map_long_string", "std::unordered_map<int64_t, std::string>"),
+    "Map<Long, Float>": ("make_map_long_float", "std::unordered_map<int64_t, float>"),
+    "Map<Long, Boolean>": ("make_map_long_bool", "std::unordered_map<int64_t, bool>"),
 }
 
 # Zero / null value for each JNI type, used in compile-check stubs.
