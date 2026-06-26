@@ -31,7 +31,7 @@ This project takes that proven pattern and generalizes it:
 2. **Generalization** — Identified which parts are specific to Vulkan/Awake vs universally applicable
 3. **Planning** — Structured a phased implementation plan with decision gates
 4. **Documentation** — Wrote comprehensive planning guide without project-specific assumptions
-5. **Scaffolding** — Created a standalone repo ready for Phase 0 (agent skill development)
+5. **Scaffolding** — Created a standalone repo ready for implementation
 
 **Timeline:** 1 day (analysis + planning + setup)  
 **Without AI:** Estimated 1–2 weeks of manual research, planning, and documentation
