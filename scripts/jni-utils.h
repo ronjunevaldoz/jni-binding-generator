@@ -198,6 +198,7 @@ inline int32_t enum_ordinal(JNIEnv* env, jobject enumObj) {
     if (!enumObj) return -1;
     jclass cls        = env->GetObjectClass(enumObj);
     jmethodID ordinalM = env->GetMethodID(cls, "ordinal", "()I");
+    if (!ordinalM) { env->DeleteLocalRef(cls); return -1; }
     jint ord = env->CallIntMethod(enumObj, ordinalM);
     env->DeleteLocalRef(cls);
     return static_cast<int32_t>(ord);
@@ -310,6 +311,7 @@ inline jobject make_list_string(JNIEnv* env, const std::vector<std::string>& vec
     jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
     jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
     jobject list  = env->NewObject(cls, ctor, static_cast<jint>(vec.size()));
+    if (!list) return nullptr;
     for (const auto& s : vec) {
         jstring jstr = env->NewStringUTF(s.c_str());
         env->CallBooleanMethod(list, add, jstr);
@@ -366,6 +368,7 @@ inline jobject make_list_int(JNIEnv* env, const std::vector<int32_t>& vec) {
     jmethodID add     = env->GetMethodID(listCls, "add",     "(Ljava/lang/Object;)Z");
     jmethodID valueOf = env->GetStaticMethodID(intCls, "valueOf", "(I)Ljava/lang/Integer;");
     jobject list = env->NewObject(listCls, ctor, static_cast<jint>(vec.size()));
+    if (!list) return nullptr;
     for (int32_t v : vec) {
         jobject boxed = env->CallStaticObjectMethod(intCls, valueOf, static_cast<jint>(v));
         env->CallBooleanMethod(list, add, boxed);
@@ -383,6 +386,7 @@ inline jobject make_list_long(JNIEnv* env, const std::vector<int64_t>& vec) {
     jmethodID add     = env->GetMethodID(listCls, "add",     "(Ljava/lang/Object;)Z");
     jmethodID valueOf = env->GetStaticMethodID(longCls, "valueOf", "(J)Ljava/lang/Long;");
     jobject list = env->NewObject(listCls, ctor, static_cast<jint>(vec.size()));
+    if (!list) return nullptr;
     for (int64_t v : vec) {
         jobject boxed = env->CallStaticObjectMethod(longCls, valueOf, static_cast<jlong>(v));
         env->CallBooleanMethod(list, add, boxed);
@@ -400,6 +404,7 @@ inline jobject make_list_float(JNIEnv* env, const std::vector<float>& vec) {
     jmethodID add     = env->GetMethodID(listCls,  "add",     "(Ljava/lang/Object;)Z");
     jmethodID valueOf = env->GetStaticMethodID(floatCls, "valueOf", "(F)Ljava/lang/Float;");
     jobject list = env->NewObject(listCls, ctor, static_cast<jint>(vec.size()));
+    if (!list) return nullptr;
     for (float v : vec) {
         jobject boxed = env->CallStaticObjectMethod(floatCls, valueOf, static_cast<jfloat>(v));
         env->CallBooleanMethod(list, add, boxed);
@@ -417,6 +422,7 @@ inline jobject make_list_double(JNIEnv* env, const std::vector<double>& vec) {
     jmethodID add     = env->GetMethodID(listCls,   "add",     "(Ljava/lang/Object;)Z");
     jmethodID valueOf = env->GetStaticMethodID(doubleCls, "valueOf", "(D)Ljava/lang/Double;");
     jobject list = env->NewObject(listCls, ctor, static_cast<jint>(vec.size()));
+    if (!list) return nullptr;
     for (double v : vec) {
         jobject boxed = env->CallStaticObjectMethod(doubleCls, valueOf, static_cast<jdouble>(v));
         env->CallBooleanMethod(list, add, boxed);
@@ -434,6 +440,7 @@ inline jobject make_list_bool(JNIEnv* env, const std::vector<bool>& vec) {
     jmethodID add     = env->GetMethodID(listCls, "add",     "(Ljava/lang/Object;)Z");
     jmethodID valueOf = env->GetStaticMethodID(boolCls, "valueOf", "(Z)Ljava/lang/Boolean;");
     jobject list = env->NewObject(listCls, ctor, static_cast<jint>(vec.size()));
+    if (!list) return nullptr;
     for (bool v : vec) {
         jobject boxed = env->CallStaticObjectMethod(boolCls, valueOf, v ? JNI_TRUE : JNI_FALSE);
         env->CallBooleanMethod(list, add, boxed);
@@ -451,6 +458,7 @@ inline jobject make_list_byte(JNIEnv* env, const std::vector<int8_t>& vec) {
     jmethodID add     = env->GetMethodID(listCls, "add",     "(Ljava/lang/Object;)Z");
     jmethodID valueOf = env->GetStaticMethodID(byteCls, "valueOf", "(B)Ljava/lang/Byte;");
     jobject list = env->NewObject(listCls, ctor, static_cast<jint>(vec.size()));
+    if (!list) return nullptr;
     for (int8_t v : vec) {
         jobject boxed = env->CallStaticObjectMethod(byteCls, valueOf, static_cast<jbyte>(v));
         env->CallBooleanMethod(list, add, boxed);
@@ -488,6 +496,7 @@ inline jobject make_list_short(JNIEnv* env, const std::vector<int16_t>& vec) {
     jmethodID add     = env->GetMethodID(listCls,  "add",     "(Ljava/lang/Object;)Z");
     jmethodID valueOf = env->GetStaticMethodID(shortCls, "valueOf", "(S)Ljava/lang/Short;");
     jobject list = env->NewObject(listCls, ctor, static_cast<jint>(vec.size()));
+    if (!list) return nullptr;
     for (int16_t v : vec) {
         jobject boxed = env->CallStaticObjectMethod(shortCls, valueOf, static_cast<jshort>(v));
         env->CallBooleanMethod(list, add, boxed);
@@ -595,6 +604,7 @@ inline jobject make_list_list_string(
     jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
     jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
     jobject result = env->NewObject(cls, ctor, static_cast<jint>(outer.size()));
+    if (!result) return nullptr;
     for (const auto& inner : outer) {
         jobject innerList = make_list_string(env, inner);
         env->CallBooleanMethod(result, add, innerList);
@@ -656,6 +666,7 @@ inline jobject make_set_string(JNIEnv* env, const std::unordered_set<std::string
     jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
     jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
     jobject result = env->NewObject(cls, ctor, static_cast<jint>(set.size()));
+    if (!result) return nullptr;
     for (const auto& s : set) {
         jstring jstr = env->NewStringUTF(s.c_str());
         env->CallBooleanMethod(result, add, jstr);
@@ -672,6 +683,7 @@ inline jobject make_set_int(JNIEnv* env, const std::unordered_set<int32_t>& set)
     jmethodID add     = env->GetMethodID(setCls, "add",     "(Ljava/lang/Object;)Z");
     jmethodID valueOf = env->GetStaticMethodID(intCls, "valueOf", "(I)Ljava/lang/Integer;");
     jobject result = env->NewObject(setCls, ctor, static_cast<jint>(set.size()));
+    if (!result) return nullptr;
     for (int32_t v : set) {
         jobject boxed = env->CallStaticObjectMethod(intCls, valueOf, static_cast<jint>(v));
         env->CallBooleanMethod(result, add, boxed);
@@ -712,6 +724,7 @@ inline jobject make_set_long(JNIEnv* env, const std::unordered_set<int64_t>& set
     jmethodID add     = env->GetMethodID(setCls,  "add",     "(Ljava/lang/Object;)Z");
     jmethodID valueOf = env->GetStaticMethodID(longCls, "valueOf", "(J)Ljava/lang/Long;");
     jobject result = env->NewObject(setCls, ctor, static_cast<jint>(set.size()));
+    if (!result) return nullptr;
     for (int64_t v : set) {
         jobject boxed = env->CallStaticObjectMethod(longCls, valueOf, static_cast<jlong>(v));
         env->CallBooleanMethod(result, add, boxed);
@@ -752,6 +765,7 @@ inline jobject make_set_float(JNIEnv* env, const std::unordered_set<float>& set)
     jmethodID add     = env->GetMethodID(setCls,   "add",     "(Ljava/lang/Object;)Z");
     jmethodID valueOf = env->GetStaticMethodID(floatCls, "valueOf", "(F)Ljava/lang/Float;");
     jobject result = env->NewObject(setCls, ctor, static_cast<jint>(set.size()));
+    if (!result) return nullptr;
     for (float v : set) {
         jobject boxed = env->CallStaticObjectMethod(floatCls, valueOf, static_cast<jfloat>(v));
         env->CallBooleanMethod(result, add, boxed);
@@ -792,6 +806,7 @@ inline jobject make_set_byte(JNIEnv* env, const std::unordered_set<int8_t>& set)
     jmethodID add     = env->GetMethodID(setCls,  "add",    "(Ljava/lang/Object;)Z");
     jmethodID valueOf = env->GetStaticMethodID(byteCls, "valueOf", "(B)Ljava/lang/Byte;");
     jobject result = env->NewObject(setCls, ctor, static_cast<jint>(set.size()));
+    if (!result) return nullptr;
     for (int8_t v : set) {
         jobject boxed = env->CallStaticObjectMethod(byteCls, valueOf, static_cast<jbyte>(v));
         env->CallBooleanMethod(result, add, boxed);
@@ -832,6 +847,7 @@ inline jobject make_set_short(JNIEnv* env, const std::unordered_set<int16_t>& se
     jmethodID add     = env->GetMethodID(setCls,   "add",    "(Ljava/lang/Object;)Z");
     jmethodID valueOf = env->GetStaticMethodID(shortCls, "valueOf", "(S)Ljava/lang/Short;");
     jobject result = env->NewObject(setCls, ctor, static_cast<jint>(set.size()));
+    if (!result) return nullptr;
     for (int16_t v : set) {
         jobject boxed = env->CallStaticObjectMethod(shortCls, valueOf, static_cast<jshort>(v));
         env->CallBooleanMethod(result, add, boxed);
@@ -888,6 +904,7 @@ inline jobject make_map_string_string(
     jmethodID put  = env->GetMethodID(cls, "put",
                          "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     jobject result = env->NewObject(cls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jstring jk = env->NewStringUTF(k.c_str());
         jstring jv = env->NewStringUTF(v.c_str());
@@ -984,6 +1001,7 @@ inline jobject make_map_string_int(
                             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     jmethodID valueOf = env->GetStaticMethodID(intCls, "valueOf", "(I)Ljava/lang/Integer;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jstring jk    = env->NewStringUTF(k.c_str());
         jobject jv    = env->CallStaticObjectMethod(intCls, valueOf, static_cast<jint>(v));
@@ -1007,6 +1025,7 @@ inline jobject make_map_int_string(
                             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     jmethodID valueOf = env->GetStaticMethodID(intCls, "valueOf", "(I)Ljava/lang/Integer;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jobject jk   = env->CallStaticObjectMethod(intCls, valueOf, static_cast<jint>(k));
         jstring jv   = env->NewStringUTF(v.c_str());
@@ -1067,6 +1086,7 @@ inline jobject make_map_string_long(
                             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     jmethodID valueOf = env->GetStaticMethodID(longCls, "valueOf", "(J)Ljava/lang/Long;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jstring jk   = env->NewStringUTF(k.c_str());
         jobject jv   = env->CallStaticObjectMethod(longCls, valueOf, static_cast<jlong>(v));
@@ -1127,6 +1147,7 @@ inline jobject make_map_string_float(
                             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     jmethodID valueOf = env->GetStaticMethodID(floatCls, "valueOf", "(F)Ljava/lang/Float;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jstring jk   = env->NewStringUTF(k.c_str());
         jobject jv   = env->CallStaticObjectMethod(floatCls, valueOf, static_cast<jfloat>(v));
@@ -1187,6 +1208,7 @@ inline jobject make_map_string_bool(
                             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     jmethodID valueOf = env->GetStaticMethodID(boolCls, "valueOf", "(Z)Ljava/lang/Boolean;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jstring jk   = env->NewStringUTF(k.c_str());
         jobject jv   = env->CallStaticObjectMethod(boolCls, valueOf, v ? JNI_TRUE : JNI_FALSE);
@@ -1252,6 +1274,7 @@ inline jobject make_map_int_int(
                             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     jmethodID valueOf = env->GetStaticMethodID(intCls, "valueOf", "(I)Ljava/lang/Integer;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jobject jk   = env->CallStaticObjectMethod(intCls, valueOf, static_cast<jint>(k));
         jobject jv   = env->CallStaticObjectMethod(intCls, valueOf, static_cast<jint>(v));
@@ -1318,6 +1341,7 @@ inline jobject make_map_int_long(
     jmethodID intValOf   = env->GetStaticMethodID(intCls,  "valueOf", "(I)Ljava/lang/Integer;");
     jmethodID longValOf  = env->GetStaticMethodID(longCls, "valueOf", "(J)Ljava/lang/Long;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jobject jk   = env->CallStaticObjectMethod(intCls,  intValOf,  static_cast<jint>(k));
         jobject jv   = env->CallStaticObjectMethod(longCls, longValOf, static_cast<jlong>(v));
@@ -1385,6 +1409,7 @@ inline jobject make_map_int_float(
     jmethodID intValOf   = env->GetStaticMethodID(intCls,   "valueOf", "(I)Ljava/lang/Integer;");
     jmethodID floatValOf = env->GetStaticMethodID(floatCls, "valueOf", "(F)Ljava/lang/Float;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jobject jk   = env->CallStaticObjectMethod(intCls,   intValOf,   static_cast<jint>(k));
         jobject jv   = env->CallStaticObjectMethod(floatCls, floatValOf, static_cast<jfloat>(v));
@@ -1452,6 +1477,7 @@ inline jobject make_map_int_bool(
     jmethodID intValOf   = env->GetStaticMethodID(intCls,  "valueOf", "(I)Ljava/lang/Integer;");
     jmethodID boolValOf  = env->GetStaticMethodID(boolCls, "valueOf", "(Z)Ljava/lang/Boolean;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jobject jk   = env->CallStaticObjectMethod(intCls,  intValOf,  static_cast<jint>(k));
         jobject jv   = env->CallStaticObjectMethod(boolCls, boolValOf, v ? JNI_TRUE : JNI_FALSE);
@@ -1500,6 +1526,7 @@ inline jobject make_set_bool(JNIEnv* env, const std::unordered_set<bool>& set) {
     jmethodID add     = env->GetMethodID(setCls,  "add",     "(Ljava/lang/Object;)Z");
     jmethodID valueOf = env->GetStaticMethodID(boolCls, "valueOf", "(Z)Ljava/lang/Boolean;");
     jobject result = env->NewObject(setCls, ctor, static_cast<jint>(set.size()));
+    if (!result) return nullptr;
     for (bool v : set) {
         jobject boxed = env->CallStaticObjectMethod(boolCls, valueOf, v ? JNI_TRUE : JNI_FALSE);
         env->CallBooleanMethod(result, add, boxed);
@@ -1540,6 +1567,7 @@ inline jobject make_set_double(JNIEnv* env, const std::unordered_set<double>& se
     jmethodID add     = env->GetMethodID(setCls,    "add",     "(Ljava/lang/Object;)Z");
     jmethodID valueOf = env->GetStaticMethodID(doubleCls, "valueOf", "(D)Ljava/lang/Double;");
     jobject result = env->NewObject(setCls, ctor, static_cast<jint>(set.size()));
+    if (!result) return nullptr;
     for (double v : set) {
         jobject boxed = env->CallStaticObjectMethod(doubleCls, valueOf, static_cast<jdouble>(v));
         env->CallBooleanMethod(result, add, boxed);
@@ -1631,6 +1659,7 @@ inline jobject make_list_list_int(
     jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
     jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
     jobject result = env->NewObject(cls, ctor, static_cast<jint>(outer.size()));
+    if (!result) return nullptr;
     for (const auto& inner : outer) {
         jobject innerList = make_list_int(env, inner);
         env->CallBooleanMethod(result, add, innerList);
@@ -1665,6 +1694,7 @@ inline jobject make_list_list_float(
     jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
     jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
     jobject result = env->NewObject(cls, ctor, static_cast<jint>(outer.size()));
+    if (!result) return nullptr;
     for (const auto& inner : outer) {
         jobject innerList = make_list_float(env, inner);
         env->CallBooleanMethod(result, add, innerList);
@@ -1699,6 +1729,7 @@ inline jobject make_list_list_long(
     jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
     jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
     jobject result = env->NewObject(cls, ctor, static_cast<jint>(outer.size()));
+    if (!result) return nullptr;
     for (const auto& inner : outer) {
         jobject innerList = make_list_long(env, inner);
         env->CallBooleanMethod(result, add, innerList);
@@ -1733,6 +1764,7 @@ inline jobject make_list_list_double(
     jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
     jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
     jobject result = env->NewObject(cls, ctor, static_cast<jint>(outer.size()));
+    if (!result) return nullptr;
     for (const auto& inner : outer) {
         jobject innerList = make_list_double(env, inner);
         env->CallBooleanMethod(result, add, innerList);
@@ -1767,6 +1799,7 @@ inline jobject make_list_list_bool(
     jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
     jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
     jobject result = env->NewObject(cls, ctor, static_cast<jint>(outer.size()));
+    if (!result) return nullptr;
     for (const auto& inner : outer) {
         jobject innerList = make_list_bool(env, inner);
         env->CallBooleanMethod(result, add, innerList);
@@ -1801,6 +1834,7 @@ inline jobject make_list_list_short(
     jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
     jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
     jobject result = env->NewObject(cls, ctor, static_cast<jint>(outer.size()));
+    if (!result) return nullptr;
     for (const auto& inner : outer) {
         jobject innerList = make_list_short(env, inner);
         env->CallBooleanMethod(result, add, innerList);
@@ -1835,6 +1869,7 @@ inline jobject make_list_list_byte(
     jmethodID ctor = env->GetMethodID(cls, "<init>", "(I)V");
     jmethodID add  = env->GetMethodID(cls, "add",    "(Ljava/lang/Object;)Z");
     jobject result = env->NewObject(cls, ctor, static_cast<jint>(outer.size()));
+    if (!result) return nullptr;
     for (const auto& inner : outer) {
         jobject innerList = make_list_byte(env, inner);
         env->CallBooleanMethod(result, add, innerList);
@@ -1895,6 +1930,7 @@ inline jobject make_map_string_double(
                             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     jmethodID valueOf = env->GetStaticMethodID(doubleCls, "valueOf", "(D)Ljava/lang/Double;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jstring jk   = env->NewStringUTF(k.c_str());
         jobject jv   = env->CallStaticObjectMethod(doubleCls, valueOf, static_cast<jdouble>(v));
@@ -1961,6 +1997,7 @@ inline jobject make_map_int_double(
     jmethodID intValOf  = env->GetStaticMethodID(intCls,    "valueOf", "(I)Ljava/lang/Integer;");
     jmethodID dblValOf  = env->GetStaticMethodID(doubleCls, "valueOf", "(D)Ljava/lang/Double;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jobject jk   = env->CallStaticObjectMethod(intCls,    intValOf, static_cast<jint>(k));
         jobject jv   = env->CallStaticObjectMethod(doubleCls, dblValOf, static_cast<jdouble>(v));
@@ -2032,6 +2069,7 @@ inline jobject make_map_long_int(
     jmethodID longValOf = env->GetStaticMethodID(longCls, "valueOf", "(J)Ljava/lang/Long;");
     jmethodID intValOf  = env->GetStaticMethodID(intCls,  "valueOf", "(I)Ljava/lang/Integer;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jobject jk   = env->CallStaticObjectMethod(longCls, longValOf, static_cast<jlong>(k));
         jobject jv   = env->CallStaticObjectMethod(intCls,  intValOf,  static_cast<jint>(v));
@@ -2094,6 +2132,7 @@ inline jobject make_map_long_long(
                             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     jmethodID valueOf = env->GetStaticMethodID(longCls, "valueOf", "(J)Ljava/lang/Long;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jobject jk   = env->CallStaticObjectMethod(longCls, valueOf, static_cast<jlong>(k));
         jobject jv   = env->CallStaticObjectMethod(longCls, valueOf, static_cast<jlong>(v));
@@ -2154,6 +2193,7 @@ inline jobject make_map_long_string(
                             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     jmethodID valueOf = env->GetStaticMethodID(longCls, "valueOf", "(J)Ljava/lang/Long;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jobject jk   = env->CallStaticObjectMethod(longCls, valueOf, static_cast<jlong>(k));
         jstring jv   = env->NewStringUTF(v.c_str());
@@ -2220,6 +2260,7 @@ inline jobject make_map_long_float(
     jmethodID longValOf  = env->GetStaticMethodID(longCls,  "valueOf", "(J)Ljava/lang/Long;");
     jmethodID floatValOf = env->GetStaticMethodID(floatCls, "valueOf", "(F)Ljava/lang/Float;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jobject jk   = env->CallStaticObjectMethod(longCls,  longValOf,  static_cast<jlong>(k));
         jobject jv   = env->CallStaticObjectMethod(floatCls, floatValOf, static_cast<jfloat>(v));
@@ -2287,6 +2328,7 @@ inline jobject make_map_long_double(
     jmethodID longValOf = env->GetStaticMethodID(longCls,   "valueOf", "(J)Ljava/lang/Long;");
     jmethodID dblValOf  = env->GetStaticMethodID(doubleCls, "valueOf", "(D)Ljava/lang/Double;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jobject jk   = env->CallStaticObjectMethod(longCls,   longValOf, static_cast<jlong>(k));
         jobject jv   = env->CallStaticObjectMethod(doubleCls, dblValOf,  static_cast<jdouble>(v));
@@ -2354,6 +2396,7 @@ inline jobject make_map_long_bool(
     jmethodID longValOf = env->GetStaticMethodID(longCls, "valueOf", "(J)Ljava/lang/Long;");
     jmethodID boolValOf = env->GetStaticMethodID(boolCls, "valueOf", "(Z)Ljava/lang/Boolean;");
     jobject result = env->NewObject(mapCls, ctor, static_cast<jint>(map.size()));
+    if (!result) return nullptr;
     for (const auto& [k, v] : map) {
         jobject jk   = env->CallStaticObjectMethod(longCls, longValOf, static_cast<jlong>(k));
         jobject jv   = env->CallStaticObjectMethod(boolCls, boolValOf, v ? JNI_TRUE : JNI_FALSE);

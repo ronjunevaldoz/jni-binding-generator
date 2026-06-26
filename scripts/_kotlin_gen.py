@@ -195,8 +195,16 @@ def _parse_c_params(raw: str) -> list[KotlinParam]:
             raw_type = " ".join(tokens[:-1]) + ptr_prefix
             param_name = last
 
+        # Distinguish const char* (input string) from char* (mutable output buffer).
+        # _normalize_c_type strips 'const', so we detect it before normalizing.
+        is_mutable_char_ptr = (
+            bool(re.search(r"(?<!\bconst\b)\s*char\s*\*", raw_type)) and "const" not in raw_type
+        )
         norm_type = _normalize_c_type(raw_type)
-        mapped = _C_PARAM_MAP.get(norm_type)
+        if norm_type == "char*" and is_mutable_char_ptr:
+            mapped: str | None = "ByteArray"
+        else:
+            mapped = _C_PARAM_MAP.get(norm_type)
         kotlin_type = mapped if mapped is not None else f"Long /* TODO: {norm_type} */"
 
         params.append(

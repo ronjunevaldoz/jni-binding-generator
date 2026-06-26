@@ -9,6 +9,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.5] — 2026-06-26
+
+### Fixed
+- **`make_*` helpers crash on OOM** (`jni-utils.h`) — `NewObject` can return null when
+  an `OutOfMemoryError` is pending. All 42 `make_list_*`, `make_set_*`, and
+  `make_map_*` helpers now null-check the result and return `nullptr` immediately,
+  leaving the pending exception intact instead of dereferencing null.
+- **`enum_ordinal` missing guard on `GetMethodID` result** (`jni-utils.h`) — If
+  `ordinalM` was null, `CallIntMethod` was undefined behaviour. Added a null-check
+  that cleans up the local ref and returns `-1`.
+- **`--kotlin-from-header` maps mutable `char*` to `String`** — `const char*` (input
+  string) and `char*` (C output buffer) were both mapped to `String`. Mutable `char*`
+  params are now correctly mapped to `ByteArray`. `ImageClassifier.kt` and its
+  generated JNI stub regenerated accordingly.
+
+---
+
 ## [1.5.4] — 2026-06-26
 
 ### Fixed

@@ -25,6 +25,10 @@ Status legend: ✅ supported · ❌ not supported
 
 Non-nullable `String` params get an `.empty()` guard; nullable ones (`String?`) do not.
 
+> **`--kotlin-from-header` only:** `const char*` maps to `String` (input). Mutable `char*`
+> (no `const`) maps to `ByteArray` — it is treated as a C output buffer, which Java/Kotlin
+> cannot represent as an immutable `String`.
+
 ## Void
 
 | Kotlin type | As param | As return | C++ type | JNI type |

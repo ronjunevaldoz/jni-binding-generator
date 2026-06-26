@@ -86,6 +86,17 @@ class TestParamTypeMapping(unittest.TestCase):
         params = self._params("void engine_load(const char* path);")
         self.assertEqual(params[0].kotlin_type, "String")
 
+    def test_mutable_char_ptr_is_byte_array(self):
+        # char* without const = output buffer, not an input string
+        params = self._params("int f(void* ctx, char* buf, int len);")
+        self.assertEqual(params[1].kotlin_type, "ByteArray")
+
+    def test_const_char_ptr_stays_string_not_byte_array(self):
+        # const char* = input string — must not be confused with output buffer
+        params = self._params("void f(const char* msg, char* out, int out_len);")
+        self.assertEqual(params[0].kotlin_type, "String")
+        self.assertEqual(params[1].kotlin_type, "ByteArray")
+
     def test_int32_param_is_int(self):
         params = self._params("void engine_set_threads(int32_t n);")
         self.assertEqual(params[0].kotlin_type, "Int")

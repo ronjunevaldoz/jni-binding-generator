@@ -17,7 +17,7 @@ object ImageClassifier {
     external fun imageClassifierDestroy(handle: Long)
     external fun imageClassifierClassify(handle: Long, pixels: ByteArray, width: Int, height: Int, scores: FloatArray, numClasses: Int): Int
     external fun imageClassifierNumClasses(handle: Long): Int
-    external fun imageClassifierGetLabel(handle: Long, classIndex: Int, buf: String, bufLen: Int): Int
+    external fun imageClassifierGetLabel(handle: Long, classIndex: Int, buf: ByteArray, bufLen: Int): Int
     external fun imageClassifierVersion(handle: Long): String
     external fun imageClassifierSetOption(handle: Long, key: String, value: Float)
     external fun imageClassifierGetOption(handle: Long, key: String): Float

@@ -117,22 +117,18 @@ Java_com_example_android_classifier_ImageClassifier_imageClassifierGetLabel(
         jclass clazz,
         jlong handle,
         jint classIndex,
-        jstring buf,
+        jbyteArray buf,
         jint bufLen) {
     // --- Marshalling ---
     void* handle_ptr = reinterpret_cast<void*>(handle);
     int32_t classIndex_val = static_cast<int32_t>(classIndex);
-    std::string buf_val = jstring2string(env, buf);
+    std::vector<uint8_t> buf_val = extract_byte_array(env, buf);
     if (env->ExceptionCheck()) return 0;
     int32_t bufLen_val = static_cast<int32_t>(bufLen);
 
     // --- Error handling ---
     if (!handle_ptr) {
         throw_illegal_state(env, "imageClassifierGetLabel: handle not initialized");
-        return 0;
-    }
-    if (buf_val.empty()) {
-        throw_illegal_argument(env, "imageClassifierGetLabel: buf is required");
         return 0;
     }
 
