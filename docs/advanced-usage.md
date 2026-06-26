@@ -119,6 +119,70 @@ JAVA_HOME=$NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr \
     python3 -m unittest discover -s scripts/tests -p test_integration.py
 ```
 
+## Custom type mappings (`--type-map`)
+
+The generator has built-in mappings for all standard Kotlin types (primitives,
+`String`, `*Array`, `List`, `Set`, `Map`, enums). Use `--type-map <file.json>`
+to inject custom types — project-specific value-objects, opaque handles, or any
+Kotlin type the generator would otherwise reject as unknown.
+
+### JSON schema
+
+All three top-level sections are optional:
+
+```json
+{
+  "types": {
+    "MyHandle": {
+      "jni_type":  "jlong",
+      "cpp_type":  "void*",
+      "convert":   "reinterpret_cast<void*>({var})",
+      "is_handle": true
+    },
+    "NativeConfig": {
+      "jni_type": "jobject",
+      "cpp_type": "native_config_t",
+      "convert":  "extract_native_config({env}, {var})"
+    }
+  },
+  "returns": {
+    "MyHandle":    ["jlong",    "0"],
+    "NativeConfig":["jobject",  "nullptr"]
+  },
+  "make_helpers": {
+    "ConfigList": ["make_config_list", "std::vector<native_config_t>"]
+  }
+}
+```
+
+| Field | Required | Description |
+|---|---|---|
+| `jni_type` | yes | JNI signature type (`jlong`, `jobject`, …) |
+| `cpp_type` | yes | Local C++ variable type after conversion |
+| `convert` | yes | C++ expression converting the JNI param; `{env}` and `{var}` are substituted at generation time |
+| `is_handle` | no | `true` → generates a null-handle check (`!handle_ptr`) |
+| `is_string` | no | `true` → generates an empty-string check (like built-in `String`) |
+
+`returns` maps the Kotlin type to `[jni_return_type, zero_value]` used in the
+function signature and early-exit return.
+
+`make_helpers` maps the Kotlin type to `[make_fn_name, cpp_return_type]`; the
+generator emits a TODO body that mentions the make function by name.
+
+Custom entries **override** built-ins when the same key appears in both.
+
+### Example
+
+```bash
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source src/ \
+    --output generated/ \
+    --type-map custom-types.json
+```
+
+See `scripts/tests/test_driver.py::TestTypeMap` for a complete worked example
+with assertions.
+
 ## Unsupported Kotlin constructs
 
 The generator hard-errors on constructs it cannot safely translate:

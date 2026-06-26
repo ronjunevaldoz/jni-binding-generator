@@ -9,6 +9,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.9] — 2026-06-26
+
+### Added
+- `docs/advanced-usage.md`: new `--type-map` section documenting the full JSON
+  schema (`types`, `returns`, `make_helpers`), field-by-field reference table,
+  `is_handle`/`is_string` flags, override semantics, and a worked example with
+  a pointer to `TestTypeMap`.
+
+---
+
 ## [1.2.8] — 2026-06-26
 
 ### Fixed
