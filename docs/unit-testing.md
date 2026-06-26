@@ -1,7 +1,7 @@
 # Unit testing guide
 
 All tests live under `scripts/tests/` and run with Python's built-in `unittest`
-(145 tests across 5 suites). No extra dependencies are required beyond a JDK
+(146 tests across 5 suites). No extra dependencies are required beyond a JDK
 (for the compilation test).
 
 ## Running the tests
@@ -85,7 +85,7 @@ Tests `main()` end-to-end using real temp directories. Covers the full write
 | `TestOutputNaming` | Two `Foo` classes in different packages get qualified names (`com_a_Foo_jni.gen.cpp`); unique class keeps short name |
 | `TestGenerateTests` | `--generate-tests` writes `*_jni_test.gen.cpp`, content has correct structure, second run is incremental (mtime unchanged) |
 | `TestDryRun` | `--dry-run` prints generated code and `[dry-run]` marker to stdout; never writes files |
-| `TestErrors` | Missing source path → `EXIT_USAGE`; unknown lowercase type → `EXIT_PARSE` with line number and function name in stderr |
+| `TestErrors` | Missing source path → `EXIT_USAGE`; source with no `external fun` → `EXIT_USAGE`; unknown lowercase type → `EXIT_PARSE` with line number and function name in stderr |
 | `TestTypeMap` | `--type-map` JSON injects custom types into the binding; missing file → `EXIT_USAGE` |
 | `TestDiffMode` | `--diff` prints a unified diff but never writes files; reports "unchanged" when output is up-to-date |
 | `TestVerboseMode` | `--verbose` prints class and function names to stdout |

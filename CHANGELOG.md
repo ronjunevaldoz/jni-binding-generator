@@ -9,6 +9,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.6] — 2026-06-26
+
+### Added
+- `test_source_with_no_external_funs_is_usage_error` in `TestErrors`
+  (`test_driver.py`) — the "No external functions found" `EXIT_USAGE` path was
+  exercised manually but had no regression test. New test covers a `.kt` file
+  with no `external fun` declarations.
+
+### Changed
+- Test count: 145 → 146
+- `docs/unit-testing.md`: updated `TestErrors` description; updated header count.
+- `README.md` / `CONTRIBUTING.md`: updated test count to 146.
+
+---
+
 ## [1.4.5] — 2026-06-26
 
 ### Fixed

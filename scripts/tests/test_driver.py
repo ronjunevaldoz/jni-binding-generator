@@ -163,6 +163,15 @@ class TestErrors(DriverTestCase):
         # `external fun bad(` is on line 6 of BAD_SOURCE (1-based, leading newline).
         self.assertEqual(bad.line, 6)
 
+    def test_source_with_no_external_funs_is_usage_error(self):
+        no_funs = self.root / "nofuns"
+        no_funs.mkdir()
+        (no_funs / "Plain.kt").write_text(
+            "package com.example\nclass Plain { fun normal() {} }", encoding="utf-8"
+        )
+        rc = gen.main(["--kotlin-source", str(no_funs), "--output", str(self.out)])
+        self.assertEqual(rc, gen.EXIT_USAGE)
+
 
 class TestTypeMap(DriverTestCase):
     _CUSTOM_SOURCE = """
