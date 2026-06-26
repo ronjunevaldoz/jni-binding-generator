@@ -450,36 +450,49 @@ class TestRemainingTypeCoverage(unittest.TestCase):
         out = self._gen("Array<Byte>")
         self.assertIn("extract_boxed_byte_array(env, x)", out)
         self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+        self.assertIn("make_boxed_byte_array", out)
 
     def test_array_boolean_param_and_return(self):
         out = self._gen("Array<Boolean>")
         self.assertIn("extract_boxed_bool_array(env, x)", out)
         self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+        self.assertIn("make_boxed_bool_array", out)
 
     def test_array_short_param_and_return(self):
         out = self._gen("Array<Short>")
         self.assertIn("extract_boxed_short_array(env, x)", out)
         self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+        self.assertIn("make_boxed_short_array", out)
 
     def test_array_int_param_and_return(self):
         out = self._gen("Array<Int>")
         self.assertIn("extract_boxed_int_array(env, x)", out)
         self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+        self.assertIn("make_boxed_int_array", out)
 
     def test_array_long_param_and_return(self):
         out = self._gen("Array<Long>")
         self.assertIn("extract_boxed_long_array(env, x)", out)
         self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+        self.assertIn("make_boxed_long_array", out)
 
     def test_array_float_param_and_return(self):
         out = self._gen("Array<Float>")
         self.assertIn("extract_boxed_float_array(env, x)", out)
         self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+        self.assertIn("make_boxed_float_array", out)
 
     def test_array_double_param_and_return(self):
         out = self._gen("Array<Double>")
         self.assertIn("extract_boxed_double_array(env, x)", out)
         self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+        self.assertIn("make_boxed_double_array", out)
+
+    def test_array_string_return(self):
+        out = self._gen("Array<String>")
+        self.assertIn("extract_string_array(env, x)", out)
+        self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+        self.assertIn("make_boxed_string_array", out)
 
     def test_unit_void_return(self):
         parsed = gen.parse_kotlin_source("package a\nclass N { external fun f(h: Long) }")

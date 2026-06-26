@@ -55,17 +55,14 @@ Boxed-object arrays. Each element is unboxed via `CallObjectMethod` → primitiv
 
 | Kotlin type      | As param | As return | C++ type                       | JNI type       | Helper (param)                |
 |---|:---:|:---:|---|---|---|
-| `Array<String>`  | ✅ | ✅ | `std::vector<std::string>`  | `jobjectArray` | `extract_string_array`        |
-| `Array<Byte>`    | ✅ | ✅ | `std::vector<int8_t>`       | `jobjectArray` | `extract_boxed_byte_array`    |
-| `Array<Short>`   | ✅ | ✅ | `std::vector<int16_t>`      | `jobjectArray` | `extract_boxed_short_array`   |
-| `Array<Int>`     | ✅ | ✅ | `std::vector<int32_t>`      | `jobjectArray` | `extract_boxed_int_array`     |
-| `Array<Long>`    | ✅ | ✅ | `std::vector<int64_t>`      | `jobjectArray` | `extract_boxed_long_array`    |
-| `Array<Float>`   | ✅ | ✅ | `std::vector<float>`        | `jobjectArray` | `extract_boxed_float_array`   |
-| `Array<Double>`  | ✅ | ✅ | `std::vector<double>`       | `jobjectArray` | `extract_boxed_double_array`  |
-| `Array<Boolean>` | ✅ | ✅ | `std::vector<bool>`         | `jobjectArray` | `extract_boxed_bool_array`    |
-
-> `Array<T>` return is not currently generated (no `make_boxed_*_array` helpers). Use
-> a primitive array return type instead, or add a helper manually.
+| `Array<String>`  | ✅ | ✅ | `std::vector<std::string>`  | `jobjectArray` | `extract_string_array` / `make_boxed_string_array`      |
+| `Array<Byte>`    | ✅ | ✅ | `std::vector<int8_t>`       | `jobjectArray` | `extract_boxed_byte_array` / `make_boxed_byte_array`    |
+| `Array<Short>`   | ✅ | ✅ | `std::vector<int16_t>`      | `jobjectArray` | `extract_boxed_short_array` / `make_boxed_short_array`  |
+| `Array<Int>`     | ✅ | ✅ | `std::vector<int32_t>`      | `jobjectArray` | `extract_boxed_int_array` / `make_boxed_int_array`      |
+| `Array<Long>`    | ✅ | ✅ | `std::vector<int64_t>`      | `jobjectArray` | `extract_boxed_long_array` / `make_boxed_long_array`    |
+| `Array<Float>`   | ✅ | ✅ | `std::vector<float>`        | `jobjectArray` | `extract_boxed_float_array` / `make_boxed_float_array`  |
+| `Array<Double>`  | ✅ | ✅ | `std::vector<double>`       | `jobjectArray` | `extract_boxed_double_array` / `make_boxed_double_array`|
+| `Array<Boolean>` | ✅ | ✅ | `std::vector<bool>`         | `jobjectArray` | `extract_boxed_bool_array` / `make_boxed_bool_array`    |
 
 ## List (java.util.List)
 

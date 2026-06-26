@@ -9,6 +9,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.6.3] — 2026-06-26
+
+### Added
+- **`Array<T>` return type fully supported** — added `make_boxed_string_array`,
+  `make_boxed_byte_array`, `make_boxed_short_array`, `make_boxed_int_array`,
+  `make_boxed_long_array`, `make_boxed_float_array`, `make_boxed_double_array`, and
+  `make_boxed_bool_array` helpers to `jni-utils.h`. All 8 boxed array types now have
+  both extract (param) and make (return) helpers. The generated TODO comment hints at
+  the correct `make_boxed_*_array(env, result)` call. Type-support matrix updated.
+
+### Fixed
+- **`jni-utils.h` formatting violations** — auto-applied `clang-format -i` to fix
+  misaligned `enum_ordinal` code added in v1.5.3. Removed `continue-on-error: true`
+  from the CI clang-format step — it is now a hard failure.
+
+---
+
 ## [1.6.2] — 2026-06-26
 
 ### Fixed

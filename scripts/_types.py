@@ -366,6 +366,15 @@ _MAKE_HELPER_MAP: dict[str, tuple[str, str]] = {
     "Map<Long, Float>": ("make_map_long_float", "std::unordered_map<int64_t, float>"),
     "Map<Long, Double>": ("make_map_long_double", "std::unordered_map<int64_t, double>"),
     "Map<Long, Boolean>": ("make_map_long_bool", "std::unordered_map<int64_t, bool>"),
+    # Boxed Array<T> return helpers (complement the existing extract_boxed_*_array params)
+    "Array<String>": ("make_boxed_string_array", "std::vector<std::string>"),
+    "Array<Byte>": ("make_boxed_byte_array", "std::vector<int8_t>"),
+    "Array<Short>": ("make_boxed_short_array", "std::vector<int16_t>"),
+    "Array<Int>": ("make_boxed_int_array", "std::vector<int32_t>"),
+    "Array<Long>": ("make_boxed_long_array", "std::vector<int64_t>"),
+    "Array<Float>": ("make_boxed_float_array", "std::vector<float>"),
+    "Array<Double>": ("make_boxed_double_array", "std::vector<double>"),
+    "Array<Boolean>": ("make_boxed_bool_array", "std::vector<bool>"),
 }
 
 _ENUM_RE = re.compile(r"^[A-Z][A-Za-z0-9_]*$")

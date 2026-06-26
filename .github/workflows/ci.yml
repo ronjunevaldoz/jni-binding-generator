@@ -31,7 +31,6 @@ jobs:
         run: ruff format --check scripts/
 
       - name: clang-format check (jni-utils.h)
-        continue-on-error: true
         run: |
           sudo apt-get install -y --no-install-recommends clang-format 2>/dev/null \
             || brew install clang-format 2>/dev/null || true
