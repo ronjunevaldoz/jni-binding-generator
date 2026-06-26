@@ -45,3 +45,25 @@ repos:
         language: system
         pass_filenames: false
         files: ^(scripts/jni-binding-generator\.py|examples/android-binding/.*)$
+
+      - id: jni-generator-drift-kmp-android
+        name: jni-generator kmp-binding androidMain up to date
+        entry: >
+          python3 scripts/jni-binding-generator.py
+          --kotlin-source examples/kmp-binding/shared/src/androidMain/kotlin
+          --output examples/kmp-binding/androidApp/src/main/cpp/generated
+          --check
+        language: system
+        pass_filenames: false
+        files: ^(scripts/jni-binding-generator\.py|examples/kmp-binding/.*)$
+
+      - id: jni-generator-drift-kmp-desktop
+        name: jni-generator kmp-binding desktopMain up to date
+        entry: >
+          python3 scripts/jni-binding-generator.py
+          --kotlin-source examples/kmp-binding/shared/src/desktopMain/kotlin
+          --output examples/kmp-binding/desktopApp/src/jvmMain/cpp/generated
+          --check
+        language: system
+        pass_filenames: false
+        files: ^(scripts/jni-binding-generator\.py|examples/kmp-binding/.*)$

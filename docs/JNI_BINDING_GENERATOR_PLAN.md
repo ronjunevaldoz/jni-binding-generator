@@ -8,7 +8,7 @@
 
 **Proposal:** Build a code generator to automate JNI boilerplate for native C++ libraries bound via JNI (e.g., inference engines, image processing, audio codecs, or any structured C++ API with 3+ bindings).
 
-**Status:** Phase 1 (Python generator) implemented and tested. The generator parses Kotlin `external fun` declarations and emits C++ JNI stubs that compile against the JDK's JNI headers. See [`scripts/jni-binding-generator.py`](../scripts/jni-binding-generator.py) and the worked example in [`examples/sample-binding/`](../examples/sample-binding/). Phases 2–3 (Gradle integration, hardening) remain optional/future work.
+**Status:** All phases implemented. The generator parses Kotlin `external fun` declarations and emits C++ JNI stubs that compile against the JDK's JNI headers. Gradle integration ships as a copy-paste `Exec` task and a precompiled convention plugin. See [`scripts/jni-binding-generator.py`](../scripts/jni-binding-generator.py), the worked examples in [`examples/`](../examples/), and the docs in [`docs/`](../docs/).
 
 **Estimated effort:** 3–4 weeks (agent skill + Python script + Gradle integration).
 

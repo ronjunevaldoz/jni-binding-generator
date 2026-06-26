@@ -9,6 +9,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.5] — 2026-06-26
+
+### Fixed
+- `docs/JNI_BINDING_GENERATOR_PLAN.md`: executive summary incorrectly said "Phases 2–3
+  remain optional/future work" — both phases are fully implemented. Updated to reflect
+  current state.
+- `.pre-commit-config.yaml`: kmp-binding was only drift-checked in CI, not in pre-commit
+  hooks. Added `jni-generator-drift-kmp-android` and `jni-generator-drift-kmp-desktop`
+  hooks to match CI coverage across all four examples.
+
+---
+
 ## [1.3.4] — 2026-06-26
 
 ### Added
