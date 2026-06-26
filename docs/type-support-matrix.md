@@ -1,6 +1,6 @@
 # Type support matrix
 
-Status legend: ✅ supported · ⏳ planned · ❌ not supported
+Status legend: ✅ supported · ❌ not supported
 
 ## Primitives
 
@@ -33,7 +33,7 @@ Non-nullable `String` params get an `.empty()` guard; nullable ones (`String?`) 
 
 ## Primitive arrays
 
-| Kotlin type  | As param | As return | C++ type                    | JNI type      |
+| Kotlin type    | As param | As return | C++ type                | JNI type        |
 |---|:---:|:---:|---|---|
 | `ByteArray`    | ✅ | ✅ | `std::vector<uint8_t>`  | `jbyteArray`    |
 | `IntArray`     | ✅ | ✅ | `std::vector<int32_t>`  | `jintArray`     |
@@ -45,68 +45,105 @@ Non-nullable `String` params get an `.empty()` guard; nullable ones (`String?`) 
 
 Nullable not supported for array types (JNI doesn't distinguish null vs empty array in practice).
 
-## Object arrays
+## Object arrays (`Array<T>`)
 
-| Kotlin type      | As param | As return | C++ type                        | JNI type        |
-|---|:---:|:---:|---|---|
-| `Array<String>`  | ✅ | ✅ | `std::vector<std::string>`  | `jobjectArray`  |
+Boxed-object arrays. Each element is unboxed via `CallObjectMethod` → primitive extract.
+
+| Kotlin type      | As param | As return | C++ type                       | JNI type       | Helper (param)                |
+|---|:---:|:---:|---|---|---|
+| `Array<String>`  | ✅ | ✅ | `std::vector<std::string>`  | `jobjectArray` | `extract_string_array`        |
+| `Array<Byte>`    | ✅ | ✅ | `std::vector<int8_t>`       | `jobjectArray` | `extract_boxed_byte_array`    |
+| `Array<Short>`   | ✅ | ✅ | `std::vector<int16_t>`      | `jobjectArray` | `extract_boxed_short_array`   |
+| `Array<Int>`     | ✅ | ✅ | `std::vector<int32_t>`      | `jobjectArray` | `extract_boxed_int_array`     |
+| `Array<Long>`    | ✅ | ✅ | `std::vector<int64_t>`      | `jobjectArray` | `extract_boxed_long_array`    |
+| `Array<Float>`   | ✅ | ✅ | `std::vector<float>`        | `jobjectArray` | `extract_boxed_float_array`   |
+| `Array<Double>`  | ✅ | ✅ | `std::vector<double>`       | `jobjectArray` | `extract_boxed_double_array`  |
+| `Array<Boolean>` | ✅ | ✅ | `std::vector<bool>`         | `jobjectArray` | `extract_boxed_bool_array`    |
+
+> `Array<T>` return is not currently generated (no `make_boxed_*_array` helpers). Use
+> a primitive array return type instead, or add a helper manually.
 
 ## List (java.util.List)
 
-| Kotlin type     | As param | As return | C++ type                        | JNI type  | Helper (param)          | Helper (return)    |
+| Kotlin type     | As param | As return | C++ type                    | JNI type  | Helper (param)        | Helper (return)      |
 |---|:---:|:---:|---|---|---|---|
-| `List<String>`  | ✅ | ✅ | `std::vector<std::string>`  | `jobject` | `extract_list_string`   | `make_list_string` |
-| `List<Int>`     | ✅ | ✅ | `std::vector<int32_t>`      | `jobject` | `extract_list_int`      | `make_list_int`    |
-| `List<Long>`    | ✅ | ✅ | `std::vector<int64_t>`      | `jobject` | `extract_list_long`     | `make_list_long`   |
-| `List<Float>`   | ✅ | ✅ | `std::vector<float>`        | `jobject` | `extract_list_float`    | `make_list_float`  |
-| `List<Double>`  | ✅ | ✅ | `std::vector<double>`       | `jobject` | `extract_list_double`   | `make_list_double` |
-| `List<Boolean>` | ✅ | ✅ | `std::vector<bool>`         | `jobject` | `extract_list_bool`     | `make_list_bool`   |
-| `List<Byte>`    | ✅ | ✅ | `std::vector<int8_t>`       | `jobject` | `extract_list_byte`     | `make_list_byte`   |
-| `List<Short>`   | ✅ | ✅ | `std::vector<int16_t>`      | `jobject` | `extract_list_short`    | `make_list_short`  |
+| `List<String>`  | ✅ | ✅ | `std::vector<std::string>`  | `jobject` | `extract_list_string`  | `make_list_string`   |
+| `List<Int>`     | ✅ | ✅ | `std::vector<int32_t>`      | `jobject` | `extract_list_int`     | `make_list_int`      |
+| `List<Long>`    | ✅ | ✅ | `std::vector<int64_t>`      | `jobject` | `extract_list_long`    | `make_list_long`     |
+| `List<Float>`   | ✅ | ✅ | `std::vector<float>`        | `jobject` | `extract_list_float`   | `make_list_float`    |
+| `List<Double>`  | ✅ | ✅ | `std::vector<double>`       | `jobject` | `extract_list_double`  | `make_list_double`   |
+| `List<Boolean>` | ✅ | ✅ | `std::vector<bool>`         | `jobject` | `extract_list_bool`    | `make_list_bool`     |
+| `List<Byte>`    | ✅ | ✅ | `std::vector<int8_t>`       | `jobject` | `extract_list_byte`    | `make_list_byte`     |
+| `List<Short>`   | ✅ | ✅ | `std::vector<int16_t>`      | `jobject` | `extract_list_short`   | `make_list_short`    |
 
-For return types the generated TODO body includes a comment like:
-```
-// Return: use make_list_string(env, yourResult) to build the jobject.
-```
+## Nested List (List<List<T>>)
+
+| Kotlin type          | As param | As return | C++ type                             | JNI type  | Helper (param)              | Helper (return)            |
+|---|:---:|:---:|---|---|---|---|
+| `List<List<String>>` | ✅ | ✅ | `std::vector<std::vector<std::string>>` | `jobject` | `extract_list_list_string` | `make_list_list_string` |
+| `List<List<Int>>`    | ✅ | ✅ | `std::vector<std::vector<int32_t>>`     | `jobject` | `extract_list_list_int`    | `make_list_list_int`    |
+| `List<List<Long>>`   | ✅ | ✅ | `std::vector<std::vector<int64_t>>`     | `jobject` | `extract_list_list_long`   | `make_list_list_long`   |
+| `List<List<Float>>`  | ✅ | ✅ | `std::vector<std::vector<float>>`       | `jobject` | `extract_list_list_float`  | `make_list_list_float`  |
+| `List<List<Double>>` | ✅ | ✅ | `std::vector<std::vector<double>>`      | `jobject` | `extract_list_list_double` | `make_list_list_double` |
+| `List<List<Boolean>>`| ✅ | ✅ | `std::vector<std::vector<bool>>`        | `jobject` | `extract_list_list_bool`   | `make_list_list_bool`   |
+| `List<List<Byte>>`   | ✅ | ✅ | `std::vector<std::vector<int8_t>>`      | `jobject` | `extract_list_list_byte`   | `make_list_list_byte`   |
+| `List<List<Short>>`  | ✅ | ✅ | `std::vector<std::vector<int16_t>>`     | `jobject` | `extract_list_list_short`  | `make_list_list_short`  |
+
+## Set (java.util.Set)
+
+| Kotlin type     | As param | As return | C++ type                           | JNI type  | Helper (param)       | Helper (return)     |
+|---|:---:|:---:|---|---|---|---|
+| `Set<String>`   | ✅ | ✅ | `std::unordered_set<std::string>`  | `jobject` | `extract_set_string`  | `make_set_string`   |
+| `Set<Int>`      | ✅ | ✅ | `std::unordered_set<int32_t>`      | `jobject` | `extract_set_int`     | `make_set_int`      |
+| `Set<Long>`     | ✅ | ✅ | `std::unordered_set<int64_t>`      | `jobject` | `extract_set_long`    | `make_set_long`     |
+| `Set<Float>`    | ✅ | ✅ | `std::unordered_set<float>`        | `jobject` | `extract_set_float`   | `make_set_float`    |
+| `Set<Double>`   | ✅ | ✅ | `std::unordered_set<double>`       | `jobject` | `extract_set_double`  | `make_set_double`   |
+| `Set<Boolean>`  | ✅ | ✅ | `std::unordered_set<bool>`         | `jobject` | `extract_set_bool`    | `make_set_bool`     |
+| `Set<Byte>`     | ✅ | ✅ | `std::unordered_set<int8_t>`       | `jobject` | `extract_set_byte`    | `make_set_byte`     |
+| `Set<Short>`    | ✅ | ✅ | `std::unordered_set<int16_t>`      | `jobject` | `extract_set_short`   | `make_set_short`    |
 
 ## Map (java.util.Map)
 
-| Kotlin type              | As param | As return | C++ type                                          | JNI type  |
+18 combinations: 3 key types (`String`, `Int`, `Long`) × 6 value types (`String`, `Int`, `Long`, `Float`, `Double`, `Boolean`).
+
+| Kotlin type              | As param | As return | C++ type                                           | Helper (param / return)                              |
 |---|:---:|:---:|---|---|
-| `Map<String, String>`    | ✅ | ✅ | `std::unordered_map<std::string, std::string>` | `jobject` | `extract_map_string_string` / `make_map_string_string` |
-| `Map<String, Int>`       | ✅ | ✅ | `std::unordered_map<std::string, int32_t>`     | `jobject` | `extract_map_string_int` / `make_map_string_int`       |
-| `Map<String, Long>`      | ✅ | ✅ | `std::unordered_map<std::string, int64_t>`     | `jobject` | `extract_map_string_long` / `make_map_string_long`     |
-| `Map<String, Float>`     | ✅ | ✅ | `std::unordered_map<std::string, float>`       | `jobject` | `extract_map_string_float` / `make_map_string_float`   |
-| `Map<String, Boolean>`   | ✅ | ✅ | `std::unordered_map<std::string, bool>`        | `jobject` | `extract_map_string_bool` / `make_map_string_bool`     |
-| `Map<Int, String>`       | ✅ | ✅ | `std::unordered_map<int32_t, std::string>`     | `jobject` | `extract_map_int_string` / `make_map_int_string`       |
-| `Map<String, Double>`    | ✅ | ✅ | `std::unordered_map<std::string, double>`      | `jobject` | `extract_map_string_double` / `make_map_string_double` |
-| `Map<Int, Double>`       | ✅ | ✅ | `std::unordered_map<int32_t, double>`          | `jobject` | `extract_map_int_double` / `make_map_int_double`       |
-| `Map<Long, Int>`         | ✅ | ✅ | `std::unordered_map<int64_t, int32_t>`         | `jobject` | `extract_map_long_int` / `make_map_long_int`           |
-| `Map<Long, Long>`        | ✅ | ✅ | `std::unordered_map<int64_t, int64_t>`         | `jobject` | `extract_map_long_long` / `make_map_long_long`         |
-| `Map<Long, String>`      | ✅ | ✅ | `std::unordered_map<int64_t, std::string>`     | `jobject` | `extract_map_long_string` / `make_map_long_string`     |
-| `Map<Long, Float>`       | ✅ | ✅ | `std::unordered_map<int64_t, float>`           | `jobject` | `extract_map_long_float` / `make_map_long_float`       |
-| `Map<Long, Double>`      | ✅ | ✅ | `std::unordered_map<int64_t, double>`          | `jobject` | `extract_map_long_double` / `make_map_long_double`     |
-| `Map<Long, Boolean>`     | ✅ | ✅ | `std::unordered_map<int64_t, bool>`            | `jobject` | `extract_map_long_bool` / `make_map_long_bool`         |
+| `Map<String, String>`    | ✅ | ✅ | `std::unordered_map<std::string, std::string>` | `extract_map_string_string` / `make_map_string_string` |
+| `Map<String, Int>`       | ✅ | ✅ | `std::unordered_map<std::string, int32_t>`     | `extract_map_string_int` / `make_map_string_int`       |
+| `Map<String, Long>`      | ✅ | ✅ | `std::unordered_map<std::string, int64_t>`     | `extract_map_string_long` / `make_map_string_long`     |
+| `Map<String, Float>`     | ✅ | ✅ | `std::unordered_map<std::string, float>`       | `extract_map_string_float` / `make_map_string_float`   |
+| `Map<String, Double>`    | ✅ | ✅ | `std::unordered_map<std::string, double>`      | `extract_map_string_double` / `make_map_string_double` |
+| `Map<String, Boolean>`   | ✅ | ✅ | `std::unordered_map<std::string, bool>`        | `extract_map_string_bool` / `make_map_string_bool`     |
+| `Map<Int, String>`       | ✅ | ✅ | `std::unordered_map<int32_t, std::string>`     | `extract_map_int_string` / `make_map_int_string`       |
+| `Map<Int, Int>`          | ✅ | ✅ | `std::unordered_map<int32_t, int32_t>`         | `extract_map_int_int` / `make_map_int_int`             |
+| `Map<Int, Long>`         | ✅ | ✅ | `std::unordered_map<int32_t, int64_t>`         | `extract_map_int_long` / `make_map_int_long`           |
+| `Map<Int, Float>`        | ✅ | ✅ | `std::unordered_map<int32_t, float>`           | `extract_map_int_float` / `make_map_int_float`         |
+| `Map<Int, Double>`       | ✅ | ✅ | `std::unordered_map<int32_t, double>`          | `extract_map_int_double` / `make_map_int_double`       |
+| `Map<Int, Boolean>`      | ✅ | ✅ | `std::unordered_map<int32_t, bool>`            | `extract_map_int_bool` / `make_map_int_bool`           |
+| `Map<Long, String>`      | ✅ | ✅ | `std::unordered_map<int64_t, std::string>`     | `extract_map_long_string` / `make_map_long_string`     |
+| `Map<Long, Int>`         | ✅ | ✅ | `std::unordered_map<int64_t, int32_t>`         | `extract_map_long_int` / `make_map_long_int`           |
+| `Map<Long, Long>`        | ✅ | ✅ | `std::unordered_map<int64_t, int64_t>`         | `extract_map_long_long` / `make_map_long_long`         |
+| `Map<Long, Float>`       | ✅ | ✅ | `std::unordered_map<int64_t, float>`           | `extract_map_long_float` / `make_map_long_float`       |
+| `Map<Long, Double>`      | ✅ | ✅ | `std::unordered_map<int64_t, double>`          | `extract_map_long_double` / `make_map_long_double`     |
+| `Map<Long, Boolean>`     | ✅ | ✅ | `std::unordered_map<int64_t, bool>`            | `extract_map_long_bool` / `make_map_long_bool`         |
 
-## Complex types (not supported)
+## Enums
 
-| Kotlin type               | As param | As return | Notes |
-|---|:---:|:---:|---|
-| Data class / POJO         | ❌ | ❌ | Requires per-field reflection; intentionally out of scope |
-| `Enum` (any named enum)   | ✅ | ✅ | Auto-detected: any `^[A-Z][A-Za-z0-9_]*$` type → `int32_t` ordinal via `enum_ordinal(env, obj)` |
-| `Set<String>`             | ✅ | ✅ | `std::unordered_set<std::string>` via `extract_set_string` / `make_set_string` |
-| `Set<Int>`                | ✅ | ✅ | `std::unordered_set<int32_t>` via `extract_set_int` / `make_set_int` |
-| `Set<Long>`               | ✅ | ✅ | `std::unordered_set<int64_t>` via `extract_set_long` / `make_set_long` |
-| `Set<Float>`              | ✅ | ✅ | `std::unordered_set<float>` via `extract_set_float` / `make_set_float` |
-| `Array<Int>`              | ✅ | ✅ | `jobjectArray` → `std::vector<int32_t>` via `extract_boxed_int_array` |
-| `Array<Long>`             | ✅ | ✅ | `jobjectArray` → `std::vector<int64_t>` via `extract_boxed_long_array` |
-| `Array<Float>`            | ✅ | ✅ | `jobjectArray` → `std::vector<float>` via `extract_boxed_float_array` |
-| `Array<Double>`           | ✅ | ✅ | `jobjectArray` → `std::vector<double>` via `extract_boxed_double_array` |
-| `List<List<String>>`      | ✅ | ✅ | Nested list via `extract_list_list_string` / `make_list_list_string` |
-| `List<List<Short>>`       | ✅ | ✅ | Nested list via `extract_list_list_short` / `make_list_list_short` |
-| `List<List<Byte>>`        | ✅ | ✅ | Nested list via `extract_list_list_byte` / `make_list_list_byte` |
-| `Set<Byte>`               | ✅ | ✅ | `std::unordered_set<int8_t>` via `extract_set_byte` / `make_set_byte` |
-| `Set<Short>`              | ✅ | ✅ | `std::unordered_set<int16_t>` via `extract_set_short` / `make_set_short` |
+Any `^[A-Z][A-Za-z0-9_]*$` type not in `TYPE_MAP` is auto-detected as an enum:
+
+| Kotlin type     | As param | As return | C++ type  | JNI type  | Helper              |
+|---|:---:|:---:|---|---|---|
+| Any named enum  | ✅ | ✅ | `int32_t` | `jint`    | `enum_ordinal(env, obj)` |
+
+## Unsupported types
+
+| Kotlin type        | Notes |
+|---|---|
+| Data class / POJO  | Requires per-field reflection; intentionally out of scope |
+| `suspend fun`      | Coroutine continuation not expressible in JNI |
+| Extension receiver | `fun T.f()` form not supported |
+| `vararg`           | Variable-argument functions not supported |
+| Function types     | `(A) -> B` lambda params not supported |
 
 ## Nullable parameters (`T?`)
 
