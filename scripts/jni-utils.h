@@ -146,6 +146,22 @@ inline std::vector<std::string> extract_string_array(JNIEnv* env, jobjectArray a
 }
 
 // --------------------------------------------------------------------------- //
+// Enum marshalling (Kotlin enum -> int32_t ordinal)
+// --------------------------------------------------------------------------- //
+
+// Extract the ordinal of any Kotlin/Java enum passed as jobject.
+// In the generated stub the parameter type is jobject; cast it before calling.
+// Returns -1 if enumObj is null.
+inline int32_t enum_ordinal(JNIEnv* env, jobject enumObj) {
+    if (!enumObj) return -1;
+    jclass cls        = env->GetObjectClass(enumObj);
+    jmethodID ordinalM = env->GetMethodID(cls, "ordinal", "()I");
+    jint ord = env->CallIntMethod(enumObj, ordinalM);
+    env->DeleteLocalRef(cls);
+    return static_cast<int32_t>(ord);
+}
+
+// --------------------------------------------------------------------------- //
 // List marshalling (java.util.List <-> C++)
 // --------------------------------------------------------------------------- //
 

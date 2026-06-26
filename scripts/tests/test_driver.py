@@ -27,7 +27,7 @@ package a.b
 class N {
     external fun ok(x: Int): Long
     external fun bad(
-        y: WeirdType,
+        y: weird_type,
     ): Long
 }
 """
@@ -141,7 +141,7 @@ class TestErrors(DriverTestCase):
         err = buf.getvalue()
         self.assertIn("line 6", err)   # `external fun bad(` is on line 6
         self.assertIn("bad()", err)
-        self.assertIn("WeirdType", err)
+        self.assertIn("weird_type", err)
 
     def test_line_number_is_accurate(self):
         parsed = gen.parse_kotlin_source(BAD_SOURCE)

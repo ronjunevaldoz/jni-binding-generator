@@ -162,3 +162,47 @@ Java_com_example_sample_SampleEngine_nativeSearch(
     // Return: use make_list_string(env, yourResult) to build the jobject.
     return nullptr;
 }
+
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_example_sample_SampleEngine_nativeSetStrategy(
+        JNIEnv* env,
+        jobject thiz,
+        jlong handle,
+        jobject strategy) {
+    // --- Marshalling ---
+    void* handle_ptr = reinterpret_cast<void*>(handle);
+    int32_t strategy_val = enum_ordinal(env, strategy);
+    if (env->ExceptionCheck()) return;
+
+    // --- Error handling ---
+    if (!handle_ptr) {
+        throw_illegal_state(env, "nativeSetStrategy: handle not initialized");
+        return;
+    }
+
+    // --- TODO: hand-written native logic ---
+    // Call into your native library using the marshalled values above.
+    return;
+}
+
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_example_sample_SampleEngine_nativeGetStrategy(
+        JNIEnv* env,
+        jobject thiz,
+        jlong handle) {
+    // --- Marshalling ---
+    void* handle_ptr = reinterpret_cast<void*>(handle);
+
+    // --- Error handling ---
+    if (!handle_ptr) {
+        throw_illegal_state(env, "nativeGetStrategy: handle not initialized");
+        return 0;
+    }
+
+    // --- TODO: hand-written native logic ---
+    // Call into your native library using the marshalled values above.
+    // Return: jint ordinal — call LogitSampler.values()[result] on the Kotlin side.
+    return 0;
+}

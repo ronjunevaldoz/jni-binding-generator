@@ -77,13 +77,22 @@ class TestGeneration(unittest.TestCase):
         self.assertNotIn("jobject thiz", out)
 
     def test_unknown_type_is_actionable(self):
+        # lowercase-start type: not treated as enum, must raise UnknownTypeError
         parsed = gen.parse_kotlin_source(
-            "package a.b\nclass N { external fun f(x: WeirdType): Long }"
+            "package a.b\nclass N { external fun f(x: weird_type): Long }"
         )
         with self.assertRaises(gen.UnknownTypeError) as ctx:
             gen.generate_function(parsed, parsed.functions[0])
-        self.assertIn("WeirdType", str(ctx.exception))
+        self.assertIn("weird_type", str(ctx.exception))
         self.assertIn("TYPE_MAP", str(ctx.exception))
+
+    def test_enum_type_maps_to_ordinal(self):
+        parsed = gen.parse_kotlin_source(
+            "package a.b\nclass N { external fun f(x: Direction): Long }"
+        )
+        out = gen.generate_function(parsed, parsed.functions[0])
+        self.assertIn("enum_ordinal", out)
+        self.assertIn("int32_t", out)
 
     def test_nullable_params_skip_required_guards(self):
         parsed = gen.parse_kotlin_source(

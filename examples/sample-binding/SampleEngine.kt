@@ -47,4 +47,10 @@ class SampleEngine {
         query: String,
         options: Map<String, String>,
     ): List<String>
+
+    /** Sets the decode strategy; LogitSampler is a Kotlin enum. */
+    external fun nativeSetStrategy(handle: Long, strategy: LogitSampler)
+
+    /** Returns the active strategy ordinal. */
+    external fun nativeGetStrategy(handle: Long): LogitSampler
 }

@@ -78,7 +78,7 @@ For return types the generated TODO body includes a comment like:
 | Kotlin type               | As param | As return | Notes |
 |---|:---:|:---:|---|
 | Data class / POJO         | ❌ | ❌ | Requires per-field reflection; out of scope |
-| `Enum`                    | ⏳ | ⏳ | Map to `int32_t` via `ordinal()` — planned     |
+| `Enum` (any named enum)   | ✅ | ✅ | Any capitalized Kotlin type is auto-detected as an enum. Param → `int32_t` via `enum_ordinal(env, obj)`. Return → `jint` ordinal; convert back with `MyEnum.values()[result]` on Kotlin side. |
 | `Set<T>`                  | ❌ | ❌ | No planned timeline |
 | `Array<T>` (non-String)   | ❌ | ❌ | Use `TArray` typed arrays instead |
 | Nested `List<List<T>>`    | ❌ | ❌ | No planned timeline |

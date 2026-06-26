@@ -134,6 +134,14 @@ class UnknownTypeError(ValueError):
     """Raised when a Kotlin type has no mapping. The message is actionable."""
 
 
+_ENUM_RE = re.compile(r"^[A-Z][A-Za-z0-9_]*$")
+
+
+def _looks_like_enum(base: str) -> bool:
+    """Heuristic: simple capitalized identifier with no generics → likely a Kotlin enum."""
+    return bool(_ENUM_RE.match(base))
+
+
 def _is_nullable(kotlin_type: str) -> bool:
     return kotlin_type.strip().endswith("?")
 
@@ -144,13 +152,22 @@ def _needs_exception_check(info: TypeInfo) -> bool:
     Strings call GetStringUTFChars; arrays call Get*ArrayRegion / GetObjectArrayElement.
     Primitive casts are pure C and never pend exceptions.
     """
-    return info.is_string or info.cpp_type.startswith(("std::vector", "std::unordered_map"))
+    return (
+        info.is_string
+        or info.cpp_type.startswith(("std::vector", "std::unordered_map"))
+        or info is _ENUM_TYPE
+    )
+
+
+_ENUM_TYPE = TypeInfo("jobject", "int32_t", "enum_ordinal({env}, {var})")
 
 
 def map_param_type(kotlin_type: str) -> TypeInfo:
     base = kotlin_type.rstrip("?").strip()
     if base in TYPE_MAP:
         return TYPE_MAP[base]
+    if _looks_like_enum(base):
+        return _ENUM_TYPE
     raise UnknownTypeError(
         f"unrecognized parameter type '{kotlin_type}'. "
         f"Add a mapping for '{base}' to TYPE_MAP in jni-binding-generator.py."
@@ -161,6 +178,8 @@ def map_return_type(kotlin_type: Optional[str]) -> Tuple[str, str]:
     base = kotlin_type.rstrip("?").strip() if kotlin_type else None
     if base in RETURN_MAP:
         return RETURN_MAP[base]
+    if base and _looks_like_enum(base):
+        return ("jint", "0")   # return the ordinal as jint
     raise UnknownTypeError(
         f"unrecognized return type '{kotlin_type}'. "
         f"Add a mapping for '{base}' to RETURN_MAP in jni-binding-generator.py."
@@ -407,6 +426,8 @@ def generate_function(parsed: ParsedFile, func: ExternalFunction) -> str:
     make_fn = _MAKE_HELPER.get(base_rt or "")
     if make_fn:
         lines.append(f"    // Return: use {make_fn}(env, yourResult) to build the jobject.")
+    elif base_rt and _looks_like_enum(base_rt) and base_rt not in RETURN_MAP:
+        lines.append(f"    // Return: jint ordinal — call {base_rt}.values()[result] on the Kotlin side.")
     lines.append(f"    {ret_stmt}")
     lines.append("}")
 
