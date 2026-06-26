@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jni-binding-generator"
-version = "1.2.5"
+version = "1.2.6"
 description = "Generate C++ JNI boilerplate from Kotlin external fun declarations"
 readme = "README.md"
 license = { text = "Apache-2.0" }
