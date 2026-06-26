@@ -9,6 +9,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.2] — 2026-06-26
+
+### Fixed
+- `release.yml`: CHANGELOG release-note extraction skipped `[Unreleased]` section
+  and now correctly picks the first versioned entry — every tag release previously
+  published blank release notes
+- `test_memory.py`: `_all_function_bodies` false-positive on `inline` inside C++
+  line comments caused `throw_java_exception` to appear twice in subtests
+  (792 subtests, down from 798)
+
+### Changed
+- `docs/memory-management.md`: added `string2jstring` and `throw_illegal_*` wrappers
+  to per-helper leak status table — every helper in `jni-utils.h` is now accounted for
+- `docs/type-support-matrix.md`: complete overhaul — all 66 types documented in
+  dedicated sections; added Enums and Unsupported types sections
+
+---
+
 ## [1.2.1] — 2026-06-26
 
 ### Added
