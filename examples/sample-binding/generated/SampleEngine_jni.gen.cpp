@@ -6,6 +6,7 @@
 
 #include <jni.h>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <cstdint>
 
@@ -108,4 +109,56 @@ Java_com_example_sample_SampleEngine_nativeRelease(
     // --- TODO: hand-written native logic ---
     // Call into your native library using the marshalled values above.
     return;
+}
+
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_com_example_sample_SampleEngine_nativeGetTags(
+        JNIEnv* env,
+        jobject thiz,
+        jlong handle) {
+    // --- Marshalling ---
+    void* handle_ptr = reinterpret_cast<void*>(handle);
+
+    // --- Error handling ---
+    if (!handle_ptr) {
+        throw_illegal_state(env, "nativeGetTags: handle not initialized");
+        return nullptr;
+    }
+
+    // --- TODO: hand-written native logic ---
+    // Call into your native library using the marshalled values above.
+    // Return: use make_list_string(env, yourResult) to build the jobject.
+    return nullptr;
+}
+
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_com_example_sample_SampleEngine_nativeSearch(
+        JNIEnv* env,
+        jobject thiz,
+        jlong handle,
+        jstring query,
+        jobject options) {
+    // --- Marshalling ---
+    void* handle_ptr = reinterpret_cast<void*>(handle);
+    std::string query_val = jstring2string(env, query);
+    if (env->ExceptionCheck()) return nullptr;
+    std::unordered_map<std::string, std::string> options_val = extract_map_string_string(env, options);
+    if (env->ExceptionCheck()) return nullptr;
+
+    // --- Error handling ---
+    if (!handle_ptr) {
+        throw_illegal_state(env, "nativeSearch: handle not initialized");
+        return nullptr;
+    }
+    if (query_val.empty()) {
+        throw_illegal_argument(env, "nativeSearch: query is required");
+        return nullptr;
+    }
+
+    // --- TODO: hand-written native logic ---
+    // Call into your native library using the marshalled values above.
+    // Return: use make_list_string(env, yourResult) to build the jobject.
+    return nullptr;
 }

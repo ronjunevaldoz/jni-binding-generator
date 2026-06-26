@@ -37,4 +37,14 @@ class SampleEngine {
 
     /** Frees the native handle. */
     external fun nativeRelease(handle: Long)
+
+    /** Returns the tag list associated with the loaded model. */
+    external fun nativeGetTags(handle: Long): List<String>
+
+    /** Searches with string options and returns ranked result IDs. */
+    external fun nativeSearch(
+        handle: Long,
+        query: String,
+        options: Map<String, String>,
+    ): List<String>
 }
