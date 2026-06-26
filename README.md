@@ -15,6 +15,11 @@ declarations and emits compiling C++ JNI stubs. A worked example lives in
 [`examples/sample-binding/`](examples/sample-binding/), and the generated output
 is verified to compile against the JDK's JNI headers.
 
+Phase 2 (Gradle integration) ships as a copy-paste template in
+[`gradle-integration/`](gradle-integration/README.md) — a raw `Exec` task for
+simple setups and a precompiled `id("jni-generator")` convention plugin with a
+`jniGenerator { bindings { ... } }` DSL for multi-binding projects.
+
 See [PLAN.md](docs/JNI_BINDING_GENERATOR_PLAN.md) for the full roadmap (Phases 0–3).
 
 ## Try It
@@ -90,6 +95,9 @@ jni-binding-generator/
 │   └── sample-binding/                 # Reference: before & after
 │       ├── SampleEngine.kt             # Input Kotlin
 │       └── generated/                  # Generated C++ (committed for reference)
+├── gradle-integration/                 # Phase 2: run the generator from Gradle
+│   ├── README.md                       # Raw-task and convention-plugin options
+│   └── build-logic/                    # Precompiled `id("jni-generator")` plugin
 └── .gitignore
 ```
 

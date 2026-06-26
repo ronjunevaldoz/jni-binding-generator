@@ -296,11 +296,17 @@ if (config_path_str.empty()) {
 
 ---
 
-### Phase 2: Gradle Integration (Week 3)
+### Phase 2: Gradle Integration (Week 3) — ✅ IMPLEMENTED (template)
 
 **Goal:** Make generation a first-class Gradle task.
 
-**Tasks:**
+**Status:** Shipped as a copy-paste integration in [`gradle-integration/`](../gradle-integration/README.md):
+- **Option A — raw `Exec` task:** zero infrastructure, paste into a module's `build.gradle.kts`. Declares Kotlin source as input / output dir as output for up-to-date checks.
+- **Option B — convention plugin:** [`jni-generator.gradle.kts`](../gradle-integration/build-logic/convention/src/main/kotlin/jni-generator.gradle.kts) precompiled script plugin applied via `id("jni-generator")`, with a `jniGenerator { bindings { register("...") { ... } } }` DSL that generates one task per binding plus an aggregate.
+- Lifecycle wiring (`dependsOn("generateJniBindings")`) and a CI drift-check snippet documented.
+- The CLI contract the tasks depend on (directory input, non-zero exit on missing source) is verified; the Gradle Kotlin DSL files are a template (not executed here — no Gradle binary in the authoring environment).
+
+**Original task breakdown (for reference):**
 
 1. **Create Gradle task** (`<your-org>.jni.generator.gradle.kts` in build-logic)
    ```kotlin
