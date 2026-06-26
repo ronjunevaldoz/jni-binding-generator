@@ -117,15 +117,18 @@ they are produced on demand like protobuf output.
 
 ---
 
-## CI drift check (optional, Phase 3 preview)
+## CI drift check
 
-To catch hand-edits to generated files, regenerate in CI and fail if the result
-differs from what is checked in (only relevant if you *do* commit generated
-output):
+To catch hand-edits to generated files, use `--check` — it re-runs generation
+in memory and exits non-zero if any file is out of date (only relevant if you
+*do* commit generated output):
 
 ```bash
 python3 scripts/jni-binding-generator.py \
     --kotlin-source core/llama/src/jvmMain \
-    --output native/jni/generated/llama
-git diff --exit-code native/jni/generated/llama
+    --output native/jni/generated/llama \
+    --check
 ```
+
+Exit code 3 means at least one file has drifted; exit code 0 means all files
+are up to date. No files are written.

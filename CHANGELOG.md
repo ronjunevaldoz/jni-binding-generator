@@ -9,6 +9,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.8] — 2026-06-26
+
+### Fixed
+- `gradle-integration/README.md`: CI drift check section used `git diff
+  --exit-code` instead of the built-in `--check` flag. Updated to show `--check`
+  as the primary approach with an explanation of exit codes.
+- `gradle-integration/README.md`: removed residual "Phase 3 preview" label from
+  the CI drift heading.
+
+---
+
 ## [1.3.7] — 2026-06-26
 
 ### Fixed
