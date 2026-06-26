@@ -33,10 +33,26 @@ repos:
           --check --generate-tests
         language: system
         pass_filenames: false
-        files: ^(scripts/(jni-binding-generator|_driver|_generator|_ios|_models|_parser|_types)\.py|examples/sample-binding/.*)$
+        files: >-
+          ^(scripts/(jni-binding-generator|_driver|_generator|_ios|_kotlin_gen|_models|_parser|_types)\.py
+          |examples/sample-binding/.*)$
+
+      - id: jni-generator-drift-android-kt
+        name: jni-generator android-binding Kotlin stubs up to date
+        entry: >
+          python3 scripts/jni-binding-generator.py
+          --kotlin-from-header examples/android-binding/include/image_classifier.h
+          --output examples/android-binding/src
+          --kotlin-package com.example.android.classifier
+          --check
+        language: system
+        pass_filenames: false
+        files: >-
+          ^(scripts/(jni-binding-generator|_driver|_kotlin_gen|_models)\.py
+          |examples/android-binding/include/.*)$
 
       - id: jni-generator-drift-android
-        name: jni-generator android-binding up to date
+        name: jni-generator android-binding JNI stubs up to date
         entry: >
           python3 scripts/jni-binding-generator.py
           --kotlin-source examples/android-binding/src/ImageClassifier.kt
@@ -44,7 +60,9 @@ repos:
           --check
         language: system
         pass_filenames: false
-        files: ^(scripts/(jni-binding-generator|_driver|_generator|_ios|_models|_parser|_types)\.py|examples/android-binding/.*)$
+        files: >-
+          ^(scripts/(jni-binding-generator|_driver|_generator|_ios|_kotlin_gen|_models|_parser|_types)\.py
+          |examples/android-binding/.*)$
 
       - id: jni-generator-drift-kmp-android
         name: jni-generator kmp-binding androidMain up to date
@@ -55,7 +73,9 @@ repos:
           --check
         language: system
         pass_filenames: false
-        files: ^(scripts/(jni-binding-generator|_driver|_generator|_ios|_models|_parser|_types)\.py|examples/kmp-binding/.*)$
+        files: >-
+          ^(scripts/(jni-binding-generator|_driver|_generator|_ios|_kotlin_gen|_models|_parser|_types)\.py
+          |examples/kmp-binding/.*)$
 
       - id: jni-generator-drift-kmp-desktop
         name: jni-generator kmp-binding desktopMain up to date
@@ -66,4 +86,6 @@ repos:
           --check
         language: system
         pass_filenames: false
-        files: ^(scripts/(jni-binding-generator|_driver|_generator|_ios|_models|_parser|_types)\.py|examples/kmp-binding/.*)$
+        files: >-
+          ^(scripts/(jni-binding-generator|_driver|_generator|_ios|_kotlin_gen|_models|_parser|_types)\.py
+          |examples/kmp-binding/.*)$
