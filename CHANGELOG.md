@@ -9,6 +9,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.4] — 2026-06-26
+
+### Fixed
+- **Broken `gradlew` scripts in example projects** — Both `examples/android-binding`
+  and `examples/kmp-binding` shipped a simplified stub that failed with
+  `Error: could not find or load main class "-Xmx64m"` due to JVM opts quoting.
+  Replaced both with the standard 248-line Gradle wrapper script and committed
+  the `gradle-wrapper.jar` (44 KB) so `./gradlew generateAll` works immediately
+  after cloning, with no manual wrapper bootstrap needed.
+
+---
+
 ## [1.5.3] — 2026-06-26
 
 ### Fixed
