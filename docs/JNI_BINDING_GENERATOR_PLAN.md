@@ -8,7 +8,7 @@
 
 **Proposal:** Build a code generator to automate JNI boilerplate for native C++ libraries bound via JNI (e.g., inference engines, image processing, audio codecs, or any structured C++ API with 3+ bindings).
 
-**Status:** Planning phase — awaiting decision to proceed or park.
+**Status:** Phase 1 (Python generator) implemented and tested. The generator parses Kotlin `external fun` declarations and emits C++ JNI stubs that compile against the JDK's JNI headers. See [`scripts/jni-binding-generator.py`](../scripts/jni-binding-generator.py) and the worked example in [`examples/sample-binding/`](../examples/sample-binding/). Phases 2–3 (Gradle integration, hardening) remain optional/future work.
 
 **Estimated effort:** 3–4 weeks (agent skill + Python script + Gradle integration).
 
@@ -225,9 +225,19 @@ if (config_path_str.empty()) {
 
 ---
 
-### Phase 1: Python Script Implementation (Week 2)
+### Phase 1: Python Script Implementation (Week 2) — ✅ IMPLEMENTED
 
 **Goal:** Convert agent-generated patterns into a production Python script.
+
+**Status:** Done. Implemented in [`scripts/jni-binding-generator.py`](../scripts/jni-binding-generator.py) with:
+- `KotlinFunctionParser` — comment-stripped regex parse of `external fun` signatures (package, class/object, params, return type, nullability, default values, generics like `Array<String>`).
+- `TypeMapper` — `TYPE_MAP` / `RETURN_MAP` tables with actionable errors for unmapped types.
+- `CppJniStubGenerator` — emits full `extern "C"` JNI entry points with JNI short-name mangling, argument marshalling, handle/string error checks, and a TODO body.
+- C++ helpers in [`scripts/jni-utils.h`](../scripts/jni-utils.h) (`jstring2string`, `extract_*_array`, `throw_illegal_*`).
+- 16 unit tests in [`scripts/tests/`](../scripts/tests/) (`python3 -m unittest discover -s scripts/tests`).
+- Verified: generated output compiles against JDK 17 JNI headers via `clang++ -fsyntax-only`.
+
+**Original task breakdown (for reference):**
 
 **Tasks:**
 
@@ -286,11 +296,17 @@ if (config_path_str.empty()) {
 
 ---
 
-### Phase 2: Gradle Integration (Week 3)
+### Phase 2: Gradle Integration (Week 3) — ✅ IMPLEMENTED (template)
 
 **Goal:** Make generation a first-class Gradle task.
 
-**Tasks:**
+**Status:** Shipped as a copy-paste integration in [`gradle-integration/`](../gradle-integration/README.md):
+- **Option A — raw `Exec` task:** zero infrastructure, paste into a module's `build.gradle.kts`. Declares Kotlin source as input / output dir as output for up-to-date checks.
+- **Option B — convention plugin:** [`jni-generator.gradle.kts`](../gradle-integration/build-logic/convention/src/main/kotlin/jni-generator.gradle.kts) precompiled script plugin applied via `id("jni-generator")`, with a `jniGenerator { bindings { register("...") { ... } } }` DSL that generates one task per binding plus an aggregate.
+- Lifecycle wiring (`dependsOn("generateJniBindings")`) and a CI drift-check snippet documented.
+- The CLI contract the tasks depend on (directory input, non-zero exit on missing source) is verified; the Gradle Kotlin DSL files are a template (not executed here — no Gradle binary in the authoring environment).
+
+**Original task breakdown (for reference):**
 
 1. **Create Gradle task** (`<your-org>.jni.generator.gradle.kts` in build-logic)
    ```kotlin
@@ -337,11 +353,21 @@ if (config_path_str.empty()) {
 
 ---
 
-### Phase 3: Polish & Testing (Week 4, Optional)
+### Phase 3: Polish & Testing (Week 4, Optional) — ✅ IMPLEMENTED
 
 **Goal:** Production readiness (if pursuing implementation).
 
-**Tasks:**
+**Status:** Done. Hardening delivered across the generator and repo:
+- **Integration test** — [`scripts/tests/test_integration.py`](../scripts/tests/test_integration.py) generates a fresh 4-function binding covering every supported type and compiles it against the JDK's `jni.h` (skips cleanly when no compiler/JDK is present).
+- **Incremental generation** — outputs are only rewritten when content changes, so unchanged files keep their mtime and don't trigger native rebuilds.
+- **`--check` mode** — verifies committed output is up to date without writing; exits `3` on drift. Documented exit codes: `0` ok, `1` usage, `2` parse/type error, `3` drift.
+- **Error messages** — unrecognized types report `line N, fn()` with a fix hint; comment-stripping preserves line numbers.
+- **CI** — [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs the test suite (with JDK so the compile test executes) and a drift-check job.
+- **Pre-commit** — [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) runs tests and the drift check as local (offline) hooks.
+
+Test count: 26 (parser, generator, driver, integration).
+
+**Original task breakdown (for reference):**
 
 1. **Integration test** — new binding (not yet in your project):
    - Manually create a dummy Kotlin interface with 5 external functions

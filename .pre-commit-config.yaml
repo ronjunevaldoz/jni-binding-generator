@@ -1,0 +1,27 @@
+# Pre-commit hooks for the JNI binding generator.
+#
+# Install once:   pip install pre-commit && pre-commit install
+# Run manually:   pre-commit run --all-files
+#
+# These are local hooks (no network) so they work offline.
+
+repos:
+  - repo: local
+    hooks:
+      - id: jni-generator-tests
+        name: jni-generator unit tests
+        entry: python3 -m unittest discover -s scripts/tests
+        language: system
+        pass_filenames: false
+        files: ^scripts/.*\.(py|h)$
+
+      - id: jni-generator-drift
+        name: jni-generator example up to date
+        entry: >
+          python3 scripts/jni-binding-generator.py
+          --kotlin-source examples/sample-binding/SampleEngine.kt
+          --output examples/sample-binding/generated
+          --check
+        language: system
+        pass_filenames: false
+        files: ^(scripts/jni-binding-generator\.py|examples/sample-binding/.*)$
