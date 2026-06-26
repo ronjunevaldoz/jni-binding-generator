@@ -91,8 +91,12 @@ TYPE_MAP = {
     "List<Long>":    TypeInfo("jobject", "std::vector<int64_t>",      "extract_list_long({env}, {var})"),
     "List<Float>":   TypeInfo("jobject", "std::vector<float>",        "extract_list_float({env}, {var})"),
     "List<Double>":  TypeInfo("jobject", "std::vector<double>",       "extract_list_double({env}, {var})"),
+    "List<Boolean>": TypeInfo("jobject", "std::vector<bool>",         "extract_list_bool({env}, {var})"),
+    "List<Byte>":    TypeInfo("jobject", "std::vector<int8_t>",       "extract_list_byte({env}, {var})"),
     # java.util.Map variants
     "Map<String, String>": TypeInfo("jobject", "std::unordered_map<std::string, std::string>", "extract_map_string_string({env}, {var})"),
+    "Map<String, Int>":    TypeInfo("jobject", "std::unordered_map<std::string, int32_t>",     "extract_map_string_int({env}, {var})"),
+    "Map<Int, String>":    TypeInfo("jobject", "std::unordered_map<int32_t, std::string>",     "extract_map_int_string({env}, {var})"),
     "Unit":        TypeInfo("void",     "void",                     None),
 }
 
@@ -116,7 +120,11 @@ RETURN_MAP = {
     "List<Long>":          ("jobject",      "nullptr"),
     "List<Float>":         ("jobject",      "nullptr"),
     "List<Double>":        ("jobject",      "nullptr"),
+    "List<Boolean>":       ("jobject",      "nullptr"),
+    "List<Byte>":          ("jobject",      "nullptr"),
     "Map<String, String>": ("jobject",      "nullptr"),
+    "Map<String, Int>":    ("jobject",      "nullptr"),
+    "Map<Int, String>":    ("jobject",      "nullptr"),
     "Unit":       ("void",        ""),
     None:         ("void",        ""),
 }
@@ -393,6 +401,7 @@ def generate_function(parsed: ParsedFile, func: ExternalFunction) -> str:
         "List<Float>":         "make_list_float",
         "List<Double>":        "make_list_double",
         "Map<String, String>": "make_map_string_string",
+        "Map<String, Int>":    "make_map_string_int",
     }
     base_rt = func.return_type.rstrip("?").strip() if func.return_type else None
     make_fn = _MAKE_HELPER.get(base_rt or "")
