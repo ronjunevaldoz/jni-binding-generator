@@ -520,5 +520,57 @@ class TestIosCinterop(DriverTestCase):
         self.assertFalse(ios_out.exists(), "--dry-run must not write cinterop files")
 
 
+class TestStrictTypes(unittest.TestCase):
+    """--strict-types flag on --kotlin-from-header."""
+
+    HEADER_CLEAN = "void* engine_create(const char* path, int n);\nvoid engine_destroy(void* h);\n"
+    HEADER_WITH_UNKNOWN = "void* engine_create(const char* path);\nvoid engine_process(SomeStruct* s);\n"
+
+    def _run(self, header_src: str, extra_flags: list[str], tmp: "Path") -> int:
+        h = tmp / "engine.h"
+        h.write_text(header_src)
+        out = tmp / "out"
+        out.mkdir()
+        return gen.main(
+            ["--kotlin-from-header", str(h), "--output", str(out), "--kotlin-package", "com.test"]
+            + extra_flags
+        )
+
+    def test_strict_passes_on_fully_mapped_header(self):
+        with tempfile.TemporaryDirectory() as d:
+            rc = self._run(self.HEADER_CLEAN, ["--strict-types", "--dry-run"], Path(d))
+        self.assertEqual(rc, gen.EXIT_OK)
+
+    def test_strict_fails_on_unknown_type(self):
+        with tempfile.TemporaryDirectory() as d:
+            rc = self._run(self.HEADER_WITH_UNKNOWN, ["--strict-types", "--dry-run"], Path(d))
+        self.assertEqual(rc, gen.EXIT_PARSE)
+
+    def test_no_strict_allows_unknown_type(self):
+        with tempfile.TemporaryDirectory() as d:
+            rc = self._run(self.HEADER_WITH_UNKNOWN, ["--dry-run"], Path(d))
+        self.assertEqual(rc, gen.EXIT_OK)
+
+
+class TestScoreCommand(unittest.TestCase):
+    """--score flag produces a scorecard without --output."""
+
+    def test_score_exits_ok(self):
+        rc = gen.main(["--score"])
+        self.assertEqual(rc, gen.EXIT_OK)
+
+    def test_score_does_not_need_output(self):
+        import subprocess
+        import sys
+
+        result = subprocess.run(
+            [sys.executable, "scripts/jni-binding-generator.py", "--score"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, gen.EXIT_OK)
+        self.assertIn("Overall score", result.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -45,6 +45,7 @@ jobs:
             scripts/_kotlin_gen.py \
             scripts/_models.py \
             scripts/_parser.py \
+            scripts/_scorer.py \
             scripts/_types.py \
             scripts/jni-utils.h \
             pyproject.toml \

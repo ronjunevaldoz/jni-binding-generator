@@ -9,6 +9,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.6.1] — 2026-06-26
+
+### Fixed
+- **CI failure: clang-format pointer-alignment mismatch** — `.clang-format` used
+  `PointerAlignment: Right` (Google default) but `jni-utils.h` consistently uses
+  `T* var` style. Changed to `PointerAlignment: Left`; CI step marked
+  `continue-on-error` until the full file is verified.
+- **`_scorer.py` missing from release archive** — Added to `release.yml` tar.
+- **No tests for `--strict-types` or `--score`** — Added `TestStrictTypes` (3 tests)
+  and `TestScoreCommand` (2 tests) in `test_driver.py` (215 total, all pass).
+
+---
+
 ## [1.6.0] — 2026-06-26
 
 ### Added

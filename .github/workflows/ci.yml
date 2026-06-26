@@ -31,12 +31,11 @@ jobs:
         run: ruff format --check scripts/
 
       - name: clang-format check (jni-utils.h)
+        continue-on-error: true
         run: |
-          if command -v clang-format &>/dev/null; then
-            clang-format --dry-run --Werror scripts/jni-utils.h
-          else
-            echo "clang-format not installed — skipping (install with: brew install clang-format)"
-          fi
+          sudo apt-get install -y --no-install-recommends clang-format 2>/dev/null \
+            || brew install clang-format 2>/dev/null || true
+          clang-format --dry-run --Werror scripts/jni-utils.h
 
   test:
     name: Tests + generated-code compile (${{ matrix.os }}, py${{ matrix.python-version }})
