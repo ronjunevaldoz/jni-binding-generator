@@ -46,9 +46,7 @@ class DriverTestCase(unittest.TestCase):
         self.tmp.cleanup()
 
     def run_gen(self, *extra):
-        return gen.main(
-            ["--kotlin-source", str(self.src), "--output", str(self.out), *extra]
-        )
+        return gen.main(["--kotlin-source", str(self.src), "--output", str(self.out), *extra])
 
 
 class TestIncrementalWrites(DriverTestCase):
@@ -109,9 +107,7 @@ class TestOutputNaming(DriverTestCase):
         rc = gen.main(["--kotlin-source", str(multi), "--output", str(self.out)])
         self.assertEqual(rc, gen.EXIT_OK)
         names = sorted(p.name for p in self.out.glob("*.gen.cpp"))
-        self.assertEqual(
-            names, ["com_a_Foo_jni.gen.cpp", "com_b_Foo_jni.gen.cpp"]
-        )
+        self.assertEqual(names, ["com_a_Foo_jni.gen.cpp", "com_b_Foo_jni.gen.cpp"])
 
     def test_unique_class_uses_short_name(self):
         self.run_gen()  # single SampleEngine
@@ -120,9 +116,7 @@ class TestOutputNaming(DriverTestCase):
 
 class TestErrors(DriverTestCase):
     def test_missing_source_path_is_usage_error(self):
-        rc = gen.main(
-            ["--kotlin-source", str(self.root / "nope"), "--output", str(self.out)]
-        )
+        rc = gen.main(["--kotlin-source", str(self.root / "nope"), "--output", str(self.out)])
         self.assertEqual(rc, gen.EXIT_USAGE)
 
     def test_unknown_type_reports_line_and_function(self):
@@ -134,12 +128,10 @@ class TestErrors(DriverTestCase):
         (bad_dir / "N.kt").write_text(BAD_SOURCE, encoding="utf-8")
         buf = io.StringIO()
         with redirect_stderr(buf):
-            rc = gen.main(
-                ["--kotlin-source", str(bad_dir), "--output", str(self.root / "bo")]
-            )
+            rc = gen.main(["--kotlin-source", str(bad_dir), "--output", str(self.root / "bo")])
         self.assertEqual(rc, gen.EXIT_PARSE)
         err = buf.getvalue()
-        self.assertIn("line 6", err)   # `external fun bad(` is on line 6
+        self.assertIn("line 6", err)  # `external fun bad(` is on line 6
         self.assertIn("bad()", err)
         self.assertIn("weird_type", err)
 

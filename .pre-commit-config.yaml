@@ -6,6 +6,15 @@
 # These are local hooks (no network) so they work offline.
 
 repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.13
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^scripts/.*\.py$
+      - id: ruff-format
+        files: ^scripts/.*\.py$
+
   - repo: local
     hooks:
       - id: jni-generator-tests

@@ -47,21 +47,20 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional, Tuple
-
 
 # --------------------------------------------------------------------------- #
 # Type mapping
 # --------------------------------------------------------------------------- #
 
+
 @dataclass(frozen=True)
 class TypeInfo:
     """How a Kotlin type maps onto the JNI and C++ worlds."""
 
-    jni_type: str            # type used in the JNI signature, e.g. "jstring"
-    cpp_type: str            # local C++ variable type, e.g. "std::string"
+    jni_type: str  # type used in the JNI signature, e.g. "jstring"
+    cpp_type: str  # local C++ variable type, e.g. "std::string"
     # marshalling expression; ``{env}`` and ``{var}`` are substituted.
-    convert: Optional[str]   # None means "no local var needed" (e.g. void)
+    convert: str | None  # None means "no local var needed" (e.g. void)
     is_handle: bool = False  # Long handles get a null-check by default
     is_string: bool = False  # strings get an empty-check helper available
 
@@ -72,78 +71,108 @@ class TypeInfo:
 # for passing a ``void*`` across the boundary). A plain numeric long is rare in
 # these signatures; callers who need one can post-process the int64_t value.
 TYPE_MAP = {
-    "Int":         TypeInfo("jint",     "int32_t",                  "static_cast<int32_t>({var})"),
-    "Long":        TypeInfo("jlong",    "void*",                    "reinterpret_cast<void*>({var})", is_handle=True),
-    "Float":       TypeInfo("jfloat",   "float",                    "static_cast<float>({var})"),
-    "Double":      TypeInfo("jdouble",  "double",                   "static_cast<double>({var})"),
-    "Boolean":     TypeInfo("jboolean", "bool",                     "({var} == JNI_TRUE)"),
-    "Short":       TypeInfo("jshort",   "int16_t",                  "static_cast<int16_t>({var})"),
-    "Byte":        TypeInfo("jbyte",    "int8_t",                   "static_cast<int8_t>({var})"),
-    "String":      TypeInfo("jstring",  "std::string",              "jstring2string({env}, {var})", is_string=True),
-    "ByteArray":   TypeInfo("jbyteArray",   "std::vector<uint8_t>", "extract_byte_array({env}, {var})"),
-    "FloatArray":  TypeInfo("jfloatArray",  "std::vector<float>",   "extract_float_array({env}, {var})"),
-    "IntArray":    TypeInfo("jintArray",    "std::vector<int32_t>", "extract_int_array({env}, {var})"),
-    "LongArray":   TypeInfo("jlongArray",    "std::vector<int64_t>", "extract_long_array({env}, {var})"),
-    "Array<String>": TypeInfo("jobjectArray", "std::vector<std::string>", "extract_string_array({env}, {var})"),
+    "Int": TypeInfo("jint", "int32_t", "static_cast<int32_t>({var})"),
+    "Long": TypeInfo("jlong", "void*", "reinterpret_cast<void*>({var})", is_handle=True),
+    "Float": TypeInfo("jfloat", "float", "static_cast<float>({var})"),
+    "Double": TypeInfo("jdouble", "double", "static_cast<double>({var})"),
+    "Boolean": TypeInfo("jboolean", "bool", "({var} == JNI_TRUE)"),
+    "Short": TypeInfo("jshort", "int16_t", "static_cast<int16_t>({var})"),
+    "Byte": TypeInfo("jbyte", "int8_t", "static_cast<int8_t>({var})"),
+    "String": TypeInfo("jstring", "std::string", "jstring2string({env}, {var})", is_string=True),
+    "ByteArray": TypeInfo("jbyteArray", "std::vector<uint8_t>", "extract_byte_array({env}, {var})"),
+    "FloatArray": TypeInfo(
+        "jfloatArray", "std::vector<float>", "extract_float_array({env}, {var})"
+    ),
+    "IntArray": TypeInfo("jintArray", "std::vector<int32_t>", "extract_int_array({env}, {var})"),
+    "LongArray": TypeInfo("jlongArray", "std::vector<int64_t>", "extract_long_array({env}, {var})"),
+    "Array<String>": TypeInfo(
+        "jobjectArray", "std::vector<std::string>", "extract_string_array({env}, {var})"
+    ),
     # java.util.List variants — arrive as jobject, unboxed to std::vector
-    "List<String>":  TypeInfo("jobject", "std::vector<std::string>",  "extract_list_string({env}, {var})"),
-    "List<Int>":     TypeInfo("jobject", "std::vector<int32_t>",      "extract_list_int({env}, {var})"),
-    "List<Long>":    TypeInfo("jobject", "std::vector<int64_t>",      "extract_list_long({env}, {var})"),
-    "List<Float>":   TypeInfo("jobject", "std::vector<float>",        "extract_list_float({env}, {var})"),
-    "List<Double>":  TypeInfo("jobject", "std::vector<double>",       "extract_list_double({env}, {var})"),
-    "List<Boolean>": TypeInfo("jobject", "std::vector<bool>",         "extract_list_bool({env}, {var})"),
-    "List<Byte>":    TypeInfo("jobject", "std::vector<int8_t>",       "extract_list_byte({env}, {var})"),
+    "List<String>": TypeInfo(
+        "jobject", "std::vector<std::string>", "extract_list_string({env}, {var})"
+    ),
+    "List<Int>": TypeInfo("jobject", "std::vector<int32_t>", "extract_list_int({env}, {var})"),
+    "List<Long>": TypeInfo("jobject", "std::vector<int64_t>", "extract_list_long({env}, {var})"),
+    "List<Float>": TypeInfo("jobject", "std::vector<float>", "extract_list_float({env}, {var})"),
+    "List<Double>": TypeInfo("jobject", "std::vector<double>", "extract_list_double({env}, {var})"),
+    "List<Boolean>": TypeInfo("jobject", "std::vector<bool>", "extract_list_bool({env}, {var})"),
+    "List<Byte>": TypeInfo("jobject", "std::vector<int8_t>", "extract_list_byte({env}, {var})"),
     # Kotlin Array<T> of boxed types — jobjectArray, unboxed to std::vector
-    "Array<Int>":    TypeInfo("jobjectArray", "std::vector<int32_t>", "extract_boxed_int_array({env}, {var})"),
-    "Array<Long>":   TypeInfo("jobjectArray", "std::vector<int64_t>", "extract_boxed_long_array({env}, {var})"),
-    "Array<Float>":  TypeInfo("jobjectArray", "std::vector<float>",   "extract_boxed_float_array({env}, {var})"),
-    "Array<Double>": TypeInfo("jobjectArray", "std::vector<double>",  "extract_boxed_double_array({env}, {var})"),
+    "Array<Int>": TypeInfo(
+        "jobjectArray", "std::vector<int32_t>", "extract_boxed_int_array({env}, {var})"
+    ),
+    "Array<Long>": TypeInfo(
+        "jobjectArray", "std::vector<int64_t>", "extract_boxed_long_array({env}, {var})"
+    ),
+    "Array<Float>": TypeInfo(
+        "jobjectArray", "std::vector<float>", "extract_boxed_float_array({env}, {var})"
+    ),
+    "Array<Double>": TypeInfo(
+        "jobjectArray", "std::vector<double>", "extract_boxed_double_array({env}, {var})"
+    ),
     # Nested collections
-    "List<List<String>>": TypeInfo("jobject", "std::vector<std::vector<std::string>>", "extract_list_list_string({env}, {var})"),
+    "List<List<String>>": TypeInfo(
+        "jobject", "std::vector<std::vector<std::string>>", "extract_list_list_string({env}, {var})"
+    ),
     # java.util.Set variants
-    "Set<String>": TypeInfo("jobject", "std::unordered_set<std::string>", "extract_set_string({env}, {var})"),
-    "Set<Int>":    TypeInfo("jobject", "std::unordered_set<int32_t>",     "extract_set_int({env}, {var})"),
+    "Set<String>": TypeInfo(
+        "jobject", "std::unordered_set<std::string>", "extract_set_string({env}, {var})"
+    ),
+    "Set<Int>": TypeInfo("jobject", "std::unordered_set<int32_t>", "extract_set_int({env}, {var})"),
     # java.util.Map variants
-    "Map<String, String>": TypeInfo("jobject", "std::unordered_map<std::string, std::string>", "extract_map_string_string({env}, {var})"),
-    "Map<String, Int>":    TypeInfo("jobject", "std::unordered_map<std::string, int32_t>",     "extract_map_string_int({env}, {var})"),
-    "Map<Int, String>":    TypeInfo("jobject", "std::unordered_map<int32_t, std::string>",     "extract_map_int_string({env}, {var})"),
-    "Unit":        TypeInfo("void",     "void",                     None),
+    "Map<String, String>": TypeInfo(
+        "jobject",
+        "std::unordered_map<std::string, std::string>",
+        "extract_map_string_string({env}, {var})",
+    ),
+    "Map<String, Int>": TypeInfo(
+        "jobject",
+        "std::unordered_map<std::string, int32_t>",
+        "extract_map_string_int({env}, {var})",
+    ),
+    "Map<Int, String>": TypeInfo(
+        "jobject",
+        "std::unordered_map<int32_t, std::string>",
+        "extract_map_int_string({env}, {var})",
+    ),
+    "Unit": TypeInfo("void", "void", None),
 }
 
 # Return-type JNI mapping plus the "empty" value to return on an error path.
 RETURN_MAP = {
-    "Int":        ("jint",        "0"),
-    "Long":       ("jlong",       "0"),
-    "Float":      ("jfloat",      "0.0f"),
-    "Double":     ("jdouble",     "0.0"),
-    "Boolean":    ("jboolean",    "JNI_FALSE"),
-    "Short":      ("jshort",      "0"),
-    "Byte":       ("jbyte",       "0"),
-    "String":     ("jstring",     "nullptr"),
-    "ByteArray":  ("jbyteArray",  "nullptr"),
+    "Int": ("jint", "0"),
+    "Long": ("jlong", "0"),
+    "Float": ("jfloat", "0.0f"),
+    "Double": ("jdouble", "0.0"),
+    "Boolean": ("jboolean", "JNI_FALSE"),
+    "Short": ("jshort", "0"),
+    "Byte": ("jbyte", "0"),
+    "String": ("jstring", "nullptr"),
+    "ByteArray": ("jbyteArray", "nullptr"),
     "FloatArray": ("jfloatArray", "nullptr"),
-    "IntArray":   ("jintArray",   "nullptr"),
-    "LongArray":  ("jlongArray",  "nullptr"),
-    "Array<String>":       ("jobjectArray", "nullptr"),
-    "List<String>":        ("jobject",      "nullptr"),
-    "List<Int>":           ("jobject",      "nullptr"),
-    "List<Long>":          ("jobject",      "nullptr"),
-    "List<Float>":         ("jobject",      "nullptr"),
-    "List<Double>":        ("jobject",      "nullptr"),
-    "List<Boolean>":       ("jobject",      "nullptr"),
-    "List<Byte>":          ("jobject",      "nullptr"),
-    "Array<Int>":          ("jobjectArray",  "nullptr"),
-    "Array<Long>":         ("jobjectArray",  "nullptr"),
-    "Array<Float>":        ("jobjectArray",  "nullptr"),
-    "Array<Double>":       ("jobjectArray",  "nullptr"),
-    "List<List<String>>":  ("jobject",      "nullptr"),
-    "Set<String>":         ("jobject",      "nullptr"),
-    "Set<Int>":            ("jobject",      "nullptr"),
-    "Map<String, String>": ("jobject",      "nullptr"),
-    "Map<String, Int>":    ("jobject",      "nullptr"),
-    "Map<Int, String>":    ("jobject",      "nullptr"),
-    "Unit":       ("void",        ""),
-    None:         ("void",        ""),
+    "IntArray": ("jintArray", "nullptr"),
+    "LongArray": ("jlongArray", "nullptr"),
+    "Array<String>": ("jobjectArray", "nullptr"),
+    "List<String>": ("jobject", "nullptr"),
+    "List<Int>": ("jobject", "nullptr"),
+    "List<Long>": ("jobject", "nullptr"),
+    "List<Float>": ("jobject", "nullptr"),
+    "List<Double>": ("jobject", "nullptr"),
+    "List<Boolean>": ("jobject", "nullptr"),
+    "List<Byte>": ("jobject", "nullptr"),
+    "Array<Int>": ("jobjectArray", "nullptr"),
+    "Array<Long>": ("jobjectArray", "nullptr"),
+    "Array<Float>": ("jobjectArray", "nullptr"),
+    "Array<Double>": ("jobjectArray", "nullptr"),
+    "List<List<String>>": ("jobject", "nullptr"),
+    "Set<String>": ("jobject", "nullptr"),
+    "Set<Int>": ("jobject", "nullptr"),
+    "Map<String, String>": ("jobject", "nullptr"),
+    "Map<String, Int>": ("jobject", "nullptr"),
+    "Map<Int, String>": ("jobject", "nullptr"),
+    "Unit": ("void", ""),
+    None: ("void", ""),
 }
 
 
@@ -191,12 +220,12 @@ def map_param_type(kotlin_type: str) -> TypeInfo:
     )
 
 
-def map_return_type(kotlin_type: Optional[str]) -> Tuple[str, str]:
+def map_return_type(kotlin_type: str | None) -> tuple[str, str]:
     base = kotlin_type.rstrip("?").strip() if kotlin_type else None
     if base in RETURN_MAP:
         return RETURN_MAP[base]
     if base and _looks_like_enum(base):
-        return ("jint", "0")   # return the ordinal as jint
+        return ("jint", "0")  # return the ordinal as jint
     raise UnknownTypeError(
         f"unrecognized return type '{kotlin_type}'. "
         f"Add a mapping for '{base}' to RETURN_MAP in jni-binding-generator.py."
@@ -207,6 +236,7 @@ def map_return_type(kotlin_type: Optional[str]) -> Tuple[str, str]:
 # Parsing
 # --------------------------------------------------------------------------- #
 
+
 @dataclass
 class Param:
     name: str
@@ -216,8 +246,8 @@ class Param:
 @dataclass
 class ExternalFunction:
     name: str
-    params: List[Param]
-    return_type: Optional[str]
+    params: list[Param]
+    return_type: str | None
     line: int = 0  # 1-based line of the declaration in the source file
 
 
@@ -225,8 +255,8 @@ class ExternalFunction:
 class ParsedFile:
     package: str
     class_name: str
-    is_static: bool                       # object / companion -> static (jclass)
-    functions: List[ExternalFunction] = field(default_factory=list)
+    is_static: bool  # object / companion -> static (jclass)
+    functions: list[ExternalFunction] = field(default_factory=list)
 
 
 _PACKAGE_RE = re.compile(r"^\s*package\s+([\w.]+)", re.MULTILINE)
@@ -240,9 +270,9 @@ _EXTERNAL_FUN_RE = re.compile(
 )
 
 
-def _split_params(raw: str) -> List[Param]:
+def _split_params(raw: str) -> list[Param]:
     """Split a parameter list, tolerating generics like Array<String> and trailing commas."""
-    params: List[Param] = []
+    params: list[Param] = []
     depth = 0
     current = ""
     for ch in raw:
@@ -286,7 +316,8 @@ def _strip_comments(source: str) -> str:
     preserves the original newline count, so reported line numbers stay
     accurate.
     """
-    def blank(match: "re.Match[str]") -> str:
+
+    def blank(match: re.Match[str]) -> str:
         return "\n" * match.group(0).count("\n")
 
     source = _BLOCK_COMMENT_RE.sub(blank, source)
@@ -312,15 +343,13 @@ def parse_kotlin_source(source: str) -> ParsedFile:
     if not is_static and re.search(r"companion\s+object", source):
         is_static = True
 
-    functions: List[ExternalFunction] = []
+    functions: list[ExternalFunction] = []
     for m in _EXTERNAL_FUN_RE.finditer(source):
         name = m.group(1)
         line = source.count("\n", 0, m.start()) + 1
         params = _split_params(m.group(2))
         ret = m.group(3).strip() if m.group(3) else None
-        functions.append(
-            ExternalFunction(name=name, params=params, return_type=ret, line=line)
-        )
+        functions.append(ExternalFunction(name=name, params=params, return_type=ret, line=line))
 
     return ParsedFile(
         package=package,
@@ -337,6 +366,7 @@ def parse_kotlin_file(path: Path) -> ParsedFile:
 # --------------------------------------------------------------------------- #
 # JNI name mangling
 # --------------------------------------------------------------------------- #
+
 
 def mangle(segment: str) -> str:
     """Apply JNI short-name mangling to a single identifier segment."""
@@ -361,6 +391,7 @@ def jni_function_name(package: str, class_name: str, method: str) -> str:
 # C++ generation
 # --------------------------------------------------------------------------- #
 
+
 def _cpp_var_name(param: Param, info: TypeInfo) -> str:
     if info.is_handle:
         return f"{param.name}_ptr"
@@ -380,13 +411,13 @@ def generate_function(parsed: ParsedFile, func: ExternalFunction) -> str:
         sig_params.append(f"{info.jni_type} {p.name}")
     signature = ",\n        ".join(sig_params)
 
-    lines: List[str] = []
+    lines: list[str] = []
     lines.append(f'extern "C" JNIEXPORT {ret_jni} JNICALL')
     lines.append(f"{jni_name}(")
     lines.append(f"        {signature}) {{")
 
     # Marshalling
-    marshalled: List[Tuple[Param, TypeInfo, str]] = []
+    marshalled: list[tuple[Param, TypeInfo, str]] = []
     real_params = [p for p in func.params if map_param_type(p.kotlin_type).convert is not None]
     if real_params:
         lines.append("    // --- Marshalling ---")
@@ -404,7 +435,7 @@ def generate_function(parsed: ParsedFile, func: ExternalFunction) -> str:
     # Error handling. Nullable parameters (e.g. `String?`, `Long?`) are allowed
     # to be null/empty, so they get no required-value guard — null flows to the
     # hand-written body.
-    checks: List[str] = []
+    checks: list[str] = []
     for p, info, var in marshalled:
         if _is_nullable(p.kotlin_type):
             continue
@@ -432,23 +463,25 @@ def generate_function(parsed: ParsedFile, func: ExternalFunction) -> str:
     lines.append("    // --- TODO: hand-written native logic ---")
     lines.append("    // Call into your native library using the marshalled values above.")
     _MAKE_HELPER = {
-        "List<String>":        "make_list_string",
-        "List<Int>":           "make_list_int",
-        "List<Long>":          "make_list_long",
-        "List<Float>":         "make_list_float",
-        "List<Double>":        "make_list_double",
-        "List<List<String>>":  "make_list_list_string",
-        "Set<String>":         "make_set_string",
-        "Set<Int>":            "make_set_int",
+        "List<String>": "make_list_string",
+        "List<Int>": "make_list_int",
+        "List<Long>": "make_list_long",
+        "List<Float>": "make_list_float",
+        "List<Double>": "make_list_double",
+        "List<List<String>>": "make_list_list_string",
+        "Set<String>": "make_set_string",
+        "Set<Int>": "make_set_int",
         "Map<String, String>": "make_map_string_string",
-        "Map<String, Int>":    "make_map_string_int",
+        "Map<String, Int>": "make_map_string_int",
     }
     base_rt = func.return_type.rstrip("?").strip() if func.return_type else None
     make_fn = _MAKE_HELPER.get(base_rt or "")
     if make_fn:
         lines.append(f"    // Return: use {make_fn}(env, yourResult) to build the jobject.")
     elif base_rt and _looks_like_enum(base_rt) and base_rt not in RETURN_MAP:
-        lines.append(f"    // Return: jint ordinal — call {base_rt}.values()[result] on the Kotlin side.")
+        lines.append(
+            f"    // Return: jint ordinal — call {base_rt}.values()[result] on the Kotlin side."
+        )
     lines.append(f"    {ret_stmt}")
     lines.append("}")
 
@@ -490,7 +523,8 @@ def generate_file(parsed: ParsedFile, source_name: str) -> str:
 # Driver
 # --------------------------------------------------------------------------- #
 
-def collect_kotlin_files(source: Path) -> List[Path]:
+
+def collect_kotlin_files(source: Path) -> list[Path]:
     if source.is_file():
         return [source] if source.suffix == ".kt" else []
     return sorted(source.rglob("*.kt"))
@@ -511,9 +545,9 @@ def output_basename(parsed: ParsedFile, qualified: bool) -> str:
 
 # Exit codes
 EXIT_OK = 0
-EXIT_USAGE = 1       # no files / nothing to generate / bad path
-EXIT_PARSE = 2       # unrecognized type or parse failure
-EXIT_DRIFT = 3       # --check found out-of-date / missing output
+EXIT_USAGE = 1  # no files / nothing to generate / bad path
+EXIT_PARSE = 2  # unrecognized type or parse failure
+EXIT_DRIFT = 3  # --check found out-of-date / missing output
 
 
 def run(kotlin_source: Path, output_dir: Path, dry_run: bool, check: bool) -> int:
@@ -524,7 +558,7 @@ def run(kotlin_source: Path, output_dir: Path, dry_run: bool, check: bool) -> in
 
     # Pre-pass: parse every file so we can detect class-name collisions before
     # choosing output names.
-    parsed_files: List[Tuple[Path, ParsedFile]] = []
+    parsed_files: list[tuple[Path, ParsedFile]] = []
     for kt in files:
         try:
             parsed = parse_kotlin_file(kt)
@@ -538,9 +572,9 @@ def run(kotlin_source: Path, output_dir: Path, dry_run: bool, check: bool) -> in
     for _, parsed in parsed_files:
         name_counts[parsed.class_name] = name_counts.get(parsed.class_name, 0) + 1
 
-    generated = 0       # files with external funs (work items)
-    written = 0         # files actually written this run
-    drifted: List[Path] = []
+    generated = 0  # files with external funs (work items)
+    written = 0  # files actually written this run
+    drifted: list[Path] = []
 
     for kt, parsed in parsed_files:
         try:
@@ -615,7 +649,7 @@ def parse_args(argv=None):
         "--check",
         action="store_true",
         help="Verify generated files are up to date without writing; "
-             "exit 3 on drift (for CI / pre-commit)",
+        "exit 3 on drift (for CI / pre-commit)",
     )
     return parser.parse_args(argv)
 

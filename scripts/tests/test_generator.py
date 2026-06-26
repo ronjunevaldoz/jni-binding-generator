@@ -32,9 +32,7 @@ class TestGeneration(unittest.TestCase):
 
     def test_signature_and_marshalling(self):
         out = self.gen_fn("nativeLoad")
-        self.assertIn(
-            "Java_com_example_sample_SampleEngine_nativeLoad(", out
-        )
+        self.assertIn("Java_com_example_sample_SampleEngine_nativeLoad(", out)
         self.assertIn("JNIEnv* env", out)
         self.assertIn("jobject thiz", out)  # instance method
         self.assertIn("std::string modelPath_val = jstring2string(env, modelPath);", out)
@@ -96,8 +94,7 @@ class TestGeneration(unittest.TestCase):
 
     def test_nullable_params_skip_required_guards(self):
         parsed = gen.parse_kotlin_source(
-            "package a.b\nclass N {\n"
-            "    external fun f(handle: Long?, name: String?): Long\n}"
+            "package a.b\nclass N {\n    external fun f(handle: Long?, name: String?): Long\n}"
         )
         out = gen.generate_function(parsed, parsed.functions[0])
         # Nullable params are still marshalled...
@@ -109,8 +106,7 @@ class TestGeneration(unittest.TestCase):
 
     def test_non_nullable_still_guarded(self):
         parsed = gen.parse_kotlin_source(
-            "package a.b\nclass N {\n"
-            "    external fun f(handle: Long, name: String): Long\n}"
+            "package a.b\nclass N {\n    external fun f(handle: Long, name: String): Long\n}"
         )
         out = gen.generate_function(parsed, parsed.functions[0])
         self.assertIn("not initialized", out)
@@ -119,7 +115,7 @@ class TestGeneration(unittest.TestCase):
     def test_full_file_has_header_and_includes(self):
         content = gen.generate_file(self.parsed, "SampleEngine.kt")
         self.assertIn("AUTO-GENERATED", content)
-        self.assertIn('#include <jni.h>', content)
+        self.assertIn("#include <jni.h>", content)
         self.assertIn('#include "jni-utils.h"', content)
         self.assertEqual(content.count('extern "C"'), 4)
 
