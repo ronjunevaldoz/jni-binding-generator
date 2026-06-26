@@ -35,7 +35,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Map<String, Double>` and `Map<Int, Double>` — Double value for all key types
   - `List<List<Short>>` and `List<List<Byte>>` — nested lists for all 8 scalar types
   - `Set<Byte>` and `Set<Short>` — Set family now covers all 8 scalar types
-- `scripts/tests/test_memory.py` — 17 static-analysis tests (798 subtests) verifying that
+- `scripts/tests/test_memory.py` — 17 static-analysis tests (792 subtests) verifying that
   every JNI local-reference acquisition in `jni-utils.h` has a matching release (EP-6,
   `FindClass`/`DeleteLocalRef` balance, iterator-loop cleanup, boxed object release)
 - `scripts/tests/test_integration.py` — compile-check fixture extended to cover all new

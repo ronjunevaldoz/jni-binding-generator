@@ -98,9 +98,19 @@ def _all_function_bodies(src: str) -> list[tuple[str, str]]:
     Return [(name, body_text), ...] for every inline function definition.
     body_text is the brace-delimited body only.
     """
+    # Build a set of line-comment ranges so we skip 'inline' inside // comments.
+    comment_ranges: list[tuple[int, int]] = []
+    for cm in re.finditer(r"//[^\n]*", src):
+        comment_ranges.append((cm.start(), cm.end()))
+
+    def _in_comment(pos: int) -> bool:
+        return any(s <= pos < e for s, e in comment_ranges)
+
     results: list[tuple[str, str]] = []
     inline_re = re.compile(r"\binline\b")
     for m in inline_re.finditer(src):
+        if _in_comment(m.start()):
+            continue
         paren_pos = src.find("(", m.end())
         if paren_pos == -1:
             continue
