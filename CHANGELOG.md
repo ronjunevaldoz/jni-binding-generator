@@ -9,6 +9,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.6.2] — 2026-06-26
+
+### Fixed
+- **Windows UnicodeEncodeError in `--score`** — `print_scorecard()` replaced Unicode
+  box-drawing characters (`┌─┐│`) and filled-block bars (`█░`) with plain ASCII
+  equivalents (`+`, `-`, `|`, `#`, `.`). The scorer now works correctly on Windows
+  terminals that use `cp1252`/`charmap` encoding. ANSI colour is still applied when
+  the output encoding supports UTF-8.
+
+---
+
 ## [1.6.1] — 2026-06-26
 
 ### Fixed

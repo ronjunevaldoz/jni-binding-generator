@@ -156,38 +156,52 @@ def score(generated_dirs: list[Path], kotlin_dirs: list[Path] | None = None) -> 
     return card
 
 
+def _stdout_supports_unicode(out) -> bool:
+    enc = (getattr(out, "encoding", None) or "ascii").lower().replace("-", "").replace("_", "")
+    return enc.startswith(("utf8", "utf16", "utf32"))
+
+
 def print_scorecard(card: ScoreCard, out=None) -> None:
     out = out or sys.stdout
     bar_width = 30
+    uni = _stdout_supports_unicode(out)
 
     def bar(score: float) -> str:
         filled = round(score * bar_width)
-        color = "\033[32m" if score >= 0.9 else ("\033[33m" if score >= 0.7 else "\033[31m")
-        reset = "\033[0m"
-        return f"{color}{'█' * filled}{'░' * (bar_width - filled)}{reset} {score * 100:5.1f}%"
+        if uni:
+            color = "\033[32m" if score >= 0.9 else ("\033[33m" if score >= 0.7 else "\033[31m")
+            reset = "\033[0m"
+            return f"{color}{'#' * filled}{'.' * (bar_width - filled)}{reset} {score * 100:5.1f}%"
+        return f"{'#' * filled}{'.' * (bar_width - filled)} {score * 100:5.1f}%"
+
+    top = "  +-----------------------------------------------------------+"
+    hdr = "  |          JNI Binding Generator -- Quality Score            |"
+    sep = "  +-----------------+-------------------------------------------+"
+    bot = "  +-----------------------------------------------------------+"
 
     lines = [
         "",
-        "  ┌─────────────────────────────────────────────────────────┐",
-        "  │          JNI Binding Generator — Quality Score           │",
-        "  ├─────────────────┬───────────────────────────────────────┤",
-        f"  │ type_coverage   │ {bar(card.type_coverage)} │",
-        f"  │ null_safety     │ {bar(card.null_safety)} │",
-        f"  │ string_safety   │ {bar(card.string_safety)} │",
-        f"  │ strict_clean    │ {bar(card.strict_clean)} │",
-        "  ├─────────────────┴───────────────────────────────────────┤",
-        f"  │ Overall score:  {card.overall * 100:5.1f} / 100" + " " * 27 + "│",
-        "  ├─────────────────────────────────────────────────────────┤",
-        f"  │ Functions:  {card.total_functions:<6}  Params: {card.total_params:<6}  TODOs: {card.todo_params:<6}  │",
-        "  └─────────────────────────────────────────────────────────┘",
+        top,
+        hdr,
+        sep,
+        f"  | type_coverage   | {bar(card.type_coverage)} |",
+        f"  | null_safety     | {bar(card.null_safety)} |",
+        f"  | string_safety   | {bar(card.string_safety)} |",
+        f"  | strict_clean    | {bar(card.strict_clean)} |",
+        sep,
+        f"  | Overall score:  {card.overall * 100:5.1f} / 100" + " " * 27 + "|",
+        sep,
+        f"  | Functions:  {card.total_functions:<6}  Params: {card.total_params:<6}  TODOs: {card.todo_params:<6}  |",
+        bot,
         "",
     ]
     for line in lines:
         print(line, file=out)
 
     if card.todo_params > 0:
+        warn = "(!)" if not uni else "(!)"
         print(
-            f"  ⚠  {card.todo_params} unmapped type(s) found — run with --strict-types to fail on these.",
+            f"  {warn}  {card.todo_params} unmapped type(s) found -- run with --strict-types to fail on these.",
             file=out,
         )
         print("", file=out)

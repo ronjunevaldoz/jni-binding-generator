@@ -524,7 +524,9 @@ class TestStrictTypes(unittest.TestCase):
     """--strict-types flag on --kotlin-from-header."""
 
     HEADER_CLEAN = "void* engine_create(const char* path, int n);\nvoid engine_destroy(void* h);\n"
-    HEADER_WITH_UNKNOWN = "void* engine_create(const char* path);\nvoid engine_process(SomeStruct* s);\n"
+    HEADER_WITH_UNKNOWN = (
+        "void* engine_create(const char* path);\nvoid engine_process(SomeStruct* s);\n"
+    )
 
     def _run(self, header_src: str, extra_flags: list[str], tmp: "Path") -> int:
         h = tmp / "engine.h"
