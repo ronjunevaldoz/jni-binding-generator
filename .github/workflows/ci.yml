@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Tests + generated-code compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Run unit + integration tests
+        # JAVA_HOME is exported by setup-java, so the integration test will
+        # actually compile generated C++ against the JDK's jni.h.
+        run: python3 -m unittest discover -s scripts/tests -v
+
+  drift:
+    name: Generated example is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check committed example matches generator output
+        run: |
+          python3 scripts/jni-binding-generator.py \
+            --kotlin-source examples/sample-binding/SampleEngine.kt \
+            --output examples/sample-binding/generated \
+            --check

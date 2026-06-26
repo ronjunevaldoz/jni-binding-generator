@@ -353,11 +353,21 @@ if (config_path_str.empty()) {
 
 ---
 
-### Phase 3: Polish & Testing (Week 4, Optional)
+### Phase 3: Polish & Testing (Week 4, Optional) — ✅ IMPLEMENTED
 
 **Goal:** Production readiness (if pursuing implementation).
 
-**Tasks:**
+**Status:** Done. Hardening delivered across the generator and repo:
+- **Integration test** — [`scripts/tests/test_integration.py`](../scripts/tests/test_integration.py) generates a fresh 4-function binding covering every supported type and compiles it against the JDK's `jni.h` (skips cleanly when no compiler/JDK is present).
+- **Incremental generation** — outputs are only rewritten when content changes, so unchanged files keep their mtime and don't trigger native rebuilds.
+- **`--check` mode** — verifies committed output is up to date without writing; exits `3` on drift. Documented exit codes: `0` ok, `1` usage, `2` parse/type error, `3` drift.
+- **Error messages** — unrecognized types report `line N, fn()` with a fix hint; comment-stripping preserves line numbers.
+- **CI** — [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs the test suite (with JDK so the compile test executes) and a drift-check job.
+- **Pre-commit** — [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) runs tests and the drift check as local (offline) hooks.
+
+Test count: 26 (parser, generator, driver, integration).
+
+**Original task breakdown (for reference):**
 
 1. **Integration test** — new binding (not yet in your project):
    - Manually create a dummy Kotlin interface with 5 external functions

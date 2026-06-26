@@ -10,8 +10,10 @@ Automate boilerplate code generation for JNI (Java Native Interface) bindings fr
 
 ## Status
 
-✅ **Phase 1 implemented** — the Python generator parses Kotlin `external fun`
-declarations and emits compiling C++ JNI stubs. A worked example lives in
+✅ **Phases 1–3 implemented** — the Python generator parses Kotlin `external fun`
+declarations and emits compiling C++ JNI stubs, with Gradle integration,
+incremental writes, a `--check` drift mode, line-numbered errors, CI, and
+pre-commit hooks. A worked example lives in
 [`examples/sample-binding/`](examples/sample-binding/), and the generated output
 is verified to compile against the JDK's JNI headers.
 
@@ -30,9 +32,18 @@ python3 scripts/jni-binding-generator.py \
     --kotlin-source examples/sample-binding/SampleEngine.kt \
     --output examples/sample-binding/generated
 
-# Run the test suite
+# Run the test suite (unit + integration compile test)
 python3 -m unittest discover -s scripts/tests
+
+# CI / pre-commit: verify committed output is up to date (exits non-zero on drift)
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source examples/sample-binding/SampleEngine.kt \
+    --output examples/sample-binding/generated \
+    --check
 ```
+
+Writes are incremental (unchanged files keep their mtime), and a GitHub Actions
+workflow plus a `.pre-commit-config.yaml` run the tests and a drift check.
 
 ## What This Is
 
