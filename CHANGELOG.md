@@ -9,6 +9,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.1] — 2026-06-26
+
+### Added
+- `TestRemainingTypeCoverage` in `test_generator.py` — 24 new tests closing all remaining
+  generator coverage gaps: `List<Int/Float>`, `List<List<Int/Float>>`, `Set<Int/Boolean/Double>`,
+  `Map<String,String>`, `Map<Int,Int/Long/Float/Boolean/String>`, `FloatArray`, `LongArray`,
+  `Array<Byte/Boolean/Short/Int/Long/Float/Double>`, `Unit` void return
+
+### Changed
+- Test count: 113 → 137
+
+---
+
 ## [1.2.0] — 2026-06-26
 
 ### Added

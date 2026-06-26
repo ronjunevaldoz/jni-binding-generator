@@ -343,5 +343,150 @@ class TestNestedListString(unittest.TestCase):
         self.assertIn("make_list_list_string", out)
 
 
+class TestRemainingTypeCoverage(unittest.TestCase):
+    """Generator tests for the 22 TYPE_MAP entries not previously covered."""
+
+    def _gen(self, kotlin_type: str) -> str:
+        parsed = gen.parse_kotlin_source(
+            f"package a\nclass N {{ external fun f(x: {kotlin_type}): {kotlin_type} }}"
+        )
+        return gen.generate_function(parsed, parsed.functions[0])
+
+    # --- List<T> base variants ---
+
+    def test_list_int_param_and_return(self):
+        out = self._gen("List<Int>")
+        self.assertIn("extract_list_int(env, x)", out)
+        self.assertIn("make_list_int", out)
+
+    def test_list_float_param_and_return(self):
+        out = self._gen("List<Float>")
+        self.assertIn("extract_list_float(env, x)", out)
+        self.assertIn("make_list_float", out)
+
+    # --- List<List<T>> for Int and Float ---
+
+    def test_list_list_int_param_and_return(self):
+        out = self._gen("List<List<Int>>")
+        self.assertIn("extract_list_list_int(env, x)", out)
+        self.assertIn("make_list_list_int", out)
+
+    def test_list_list_float_param_and_return(self):
+        out = self._gen("List<List<Float>>")
+        self.assertIn("extract_list_list_float(env, x)", out)
+        self.assertIn("make_list_list_float", out)
+
+    # --- Set<T> variants ---
+
+    def test_set_int_param_and_return(self):
+        out = self._gen("Set<Int>")
+        self.assertIn("extract_set_int(env, x)", out)
+        self.assertIn("make_set_int", out)
+
+    def test_set_boolean_param_and_return(self):
+        out = self._gen("Set<Boolean>")
+        self.assertIn("extract_set_bool(env, x)", out)
+        self.assertIn("make_set_bool", out)
+
+    def test_set_double_param_and_return(self):
+        out = self._gen("Set<Double>")
+        self.assertIn("extract_set_double(env, x)", out)
+        self.assertIn("make_set_double", out)
+
+    # --- Map<String, *> ---
+
+    def test_map_string_string_param_and_return(self):
+        out = self._gen("Map<String, String>")
+        self.assertIn("extract_map_string_string(env, x)", out)
+        self.assertIn("make_map_string_string", out)
+
+    def test_map_string_int_param_and_return(self):
+        out = self._gen("Map<String, Int>")
+        self.assertIn("extract_map_string_int(env, x)", out)
+        self.assertIn("make_map_string_int", out)
+
+    # --- Map<Int, *> variants missing coverage ---
+
+    def test_map_int_int_param_and_return(self):
+        out = self._gen("Map<Int, Int>")
+        self.assertIn("extract_map_int_int(env, x)", out)
+        self.assertIn("make_map_int_int", out)
+
+    def test_map_int_long_param_and_return(self):
+        out = self._gen("Map<Int, Long>")
+        self.assertIn("extract_map_int_long(env, x)", out)
+        self.assertIn("make_map_int_long", out)
+
+    def test_map_int_float_param_and_return(self):
+        out = self._gen("Map<Int, Float>")
+        self.assertIn("extract_map_int_float(env, x)", out)
+        self.assertIn("make_map_int_float", out)
+
+    def test_map_int_bool_param_and_return(self):
+        out = self._gen("Map<Int, Boolean>")
+        self.assertIn("extract_map_int_bool(env, x)", out)
+        self.assertIn("make_map_int_bool", out)
+
+    def test_map_int_string_param_and_return(self):
+        out = self._gen("Map<Int, String>")
+        self.assertIn("extract_map_int_string(env, x)", out)
+        self.assertIn("make_map_int_string", out)
+
+    # --- Primitive arrays ---
+
+    def test_float_array_param_and_return(self):
+        out = self._gen("FloatArray")
+        self.assertIn("jfloatArray x", out)
+        self.assertIn("JNIEXPORT jfloatArray JNICALL", out)
+
+    def test_long_array_param_and_return(self):
+        out = self._gen("LongArray")
+        self.assertIn("jlongArray x", out)
+        self.assertIn("JNIEXPORT jlongArray JNICALL", out)
+
+    # --- Boxed Array<T> variants ---
+
+    def test_array_byte_param_and_return(self):
+        out = self._gen("Array<Byte>")
+        self.assertIn("extract_boxed_byte_array(env, x)", out)
+        self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+
+    def test_array_boolean_param_and_return(self):
+        out = self._gen("Array<Boolean>")
+        self.assertIn("extract_boxed_bool_array(env, x)", out)
+        self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+
+    def test_array_short_param_and_return(self):
+        out = self._gen("Array<Short>")
+        self.assertIn("extract_boxed_short_array(env, x)", out)
+        self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+
+    def test_array_int_param_and_return(self):
+        out = self._gen("Array<Int>")
+        self.assertIn("extract_boxed_int_array(env, x)", out)
+        self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+
+    def test_array_long_param_and_return(self):
+        out = self._gen("Array<Long>")
+        self.assertIn("extract_boxed_long_array(env, x)", out)
+        self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+
+    def test_array_float_param_and_return(self):
+        out = self._gen("Array<Float>")
+        self.assertIn("extract_boxed_float_array(env, x)", out)
+        self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+
+    def test_array_double_param_and_return(self):
+        out = self._gen("Array<Double>")
+        self.assertIn("extract_boxed_double_array(env, x)", out)
+        self.assertIn("JNIEXPORT jobjectArray JNICALL", out)
+
+    def test_unit_void_return(self):
+        parsed = gen.parse_kotlin_source("package a\nclass N { external fun f(h: Long) }")
+        out = gen.generate_function(parsed, parsed.functions[0])
+        self.assertIn("JNIEXPORT void JNICALL", out)
+        self.assertIn("return;", out)
+
+
 if __name__ == "__main__":
     unittest.main()

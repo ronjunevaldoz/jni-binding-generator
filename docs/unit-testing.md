@@ -1,7 +1,7 @@
 # Unit testing guide
 
 All tests live under `scripts/tests/` and run with Python's built-in `unittest`
-(113 tests across 5 suites). No extra dependencies are required beyond a JDK
+(137 tests across 5 suites). No extra dependencies are required beyond a JDK
 (for the compilation test).
 
 ## Running the tests
@@ -66,6 +66,10 @@ test parses a minimal inline Kotlin snippet and asserts on the generated C++ str
 | `test_generate_test_file_covers_make_helpers` | `make_list_string`, `make_map_string_int`, `make_set_string` present for return types |
 | `test_generate_test_file_skips_void` | Void-return functions emit no `make_*` call |
 | `test_full_file_has_header_and_includes` | File header, `#include <jni.h>`, `#include "jni-utils.h"`, correct `extern "C"` count |
+| `TestNewTypeFamily` | `List<Short>`, all `Set<*>` variants, all `Map<*,*>` variants, `List<List<*>>` — extract/make helpers |
+| `TestNestedListLongDoubleBoolean` | `List<List<Long/Double/Boolean>>` — param and return via `generate_file()` |
+| `TestNestedListString` | `List<List<String>>` — param and return |
+| `TestRemainingTypeCoverage` | All 22 previously-untested types: `List<Int/Float>`, `List<List<Int/Float>>`, `Set<Int/Boolean/Double>`, `Map<String,String>`, `Map<Int,Int/Long/Float/Boolean/String>`, `FloatArray`, `LongArray`, `Array<Byte/Boolean/Short/Int/Long/Float/Double>`, `Unit` |
 
 ### `test_driver.py` — CLI driver behaviour
 
