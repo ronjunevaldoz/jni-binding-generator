@@ -1,0 +1,2 @@
+# Allow the Gradle wrapper jar — the root .gitignore excludes it globally
+!gradle/wrapper/gradle-wrapper.jar
