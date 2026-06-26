@@ -585,6 +585,10 @@ def parse_kotlin_source(source: str, filename: str = "") -> ParsedFile:
         # MVP 3: honour @JvmName if it appears in the 300 chars before "external fun".
         lookahead = source[max(0, m.start() - 300) : m.start()]
         jvm_name_match = _JVM_NAME_RE.search(lookahead)
+        if jvm_name_match and re.search(r"\bexternal\s+fun\b", lookahead[jvm_name_match.end():]):
+            # Another external fun sits between this annotation and the current one —
+            # the annotation belongs to that prior function, not this one.
+            jvm_name_match = None
         name = jvm_name_match.group(1) if jvm_name_match else m.group(1)
         line = source.count("\n", 0, m.start()) + 1
         params = _split_params(m.group(2))

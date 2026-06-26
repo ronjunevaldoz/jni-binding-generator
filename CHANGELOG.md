@@ -9,6 +9,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.0] — 2026-06-26
+
+### Fixed
+- **`@JvmName` bleeding into the next function** — when a function annotated with
+  `@JvmName("foo")` was followed by another `external fun` within 300 characters,
+  the parser applied the annotation's name to both functions. The look-behind check
+  now discards a `@JvmName` match if another `external fun` appears between the
+  annotation and the current function.
+- Added regression test `test_jvm_name_does_not_bleed_to_next_function` in
+  `test_parser.py::TestJvmName`.
+
+### Changed
+- Test count: 143 → 144
+
+---
+
 ## [1.2.9] — 2026-06-26
 
 ### Added

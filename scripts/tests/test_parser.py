@@ -134,6 +134,19 @@ class TestJvmName(unittest.TestCase):
         self.assertIn("Java_a_N_bar(", out)
         self.assertNotIn("Java_a_N_foo", out)
 
+    def test_jvm_name_does_not_bleed_to_next_function(self):
+        # @JvmName on one function must not rename the function that follows it.
+        parsed = gen.parse_kotlin_source(
+            'package a\nclass N {\n'
+            '  @JvmName("renamed")\n'
+            '  external fun first(x: Int): Long\n'
+            '  external fun second(y: Int): Long\n'
+            '}'
+        )
+        self.assertEqual(len(parsed.functions), 2)
+        self.assertEqual(parsed.functions[0].name, "renamed")
+        self.assertEqual(parsed.functions[1].name, "second")
+
 
 class TestTopLevelFun(unittest.TestCase):
     def test_top_level_uses_filename_kt(self):
