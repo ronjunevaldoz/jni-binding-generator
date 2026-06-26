@@ -9,6 +9,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.2] — 2026-06-26
+
+### Fixed
+- `CONTRIBUTING.md`: "Python 3.9+ required" updated to "Python 3.10+" to match
+  `requires-python` in pyproject.toml. "confirm all 140 tests pass" updated to 145.
+
+---
+
 ## [1.4.1] — 2026-06-26
 
 ### Fixed

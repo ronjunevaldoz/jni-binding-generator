@@ -12,7 +12,7 @@ extend type coverage, add examples, improve docs, or fix bugs are welcome.
 git clone https://github.com/ronjunevaldoz/jni-binding-generator.git
 cd jni-binding-generator
 
-# Python 3.9+ required — no extra runtime dependencies
+# Python 3.10+ required — no extra runtime dependencies
 python3 --version
 
 # Run the full test suite
@@ -32,7 +32,7 @@ ruff format --check scripts/
 1. Fork the repo and create a feature branch
 2. Make your changes — keep them focused; one concern per PR
 3. Add or update tests (`scripts/tests/`) to cover the change
-4. Run the full suite and confirm all 140 tests pass
+4. Run the full suite and confirm all 145 tests pass
 5. Run `ruff check scripts/` — no lint errors
 6. If you changed `scripts/jni-binding-generator.py`, re-run the drift check:
    ```bash
