@@ -9,6 +9,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.9] — 2026-06-26
+
+### Fixed
+- `ACKNOWLEDGMENTS.md`: footer status was "Planning phase — awaiting go/no-go
+  decision"; updated to reflect the current shipped state (v1.3.8, 145 tests).
+
+---
+
 ## [1.3.8] — 2026-06-26
 
 ### Fixed
