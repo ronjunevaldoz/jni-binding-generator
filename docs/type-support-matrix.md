@@ -62,6 +62,7 @@ Nullable not supported for array types (JNI doesn't distinguish null vs empty ar
 | `List<Double>`  | ✅ | ✅ | `std::vector<double>`       | `jobject` | `extract_list_double`   | `make_list_double` |
 | `List<Boolean>` | ✅ | ✅ | `std::vector<bool>`         | `jobject` | `extract_list_bool`     | `make_list_bool`   |
 | `List<Byte>`    | ✅ | ✅ | `std::vector<int8_t>`       | `jobject` | `extract_list_byte`     | `make_list_byte`   |
+| `List<Short>`   | ✅ | ✅ | `std::vector<int16_t>`      | `jobject` | `extract_list_short`    | `make_list_short`  |
 
 For return types the generated TODO body includes a comment like:
 ```
@@ -74,6 +75,9 @@ For return types the generated TODO body includes a comment like:
 |---|:---:|:---:|---|---|
 | `Map<String, String>`    | ✅ | ✅ | `std::unordered_map<std::string, std::string>` | `jobject` | `extract_map_string_string` / `make_map_string_string` |
 | `Map<String, Int>`       | ✅ | ✅ | `std::unordered_map<std::string, int32_t>`     | `jobject` | `extract_map_string_int` / `make_map_string_int`       |
+| `Map<String, Long>`      | ✅ | ✅ | `std::unordered_map<std::string, int64_t>`     | `jobject` | `extract_map_string_long` / `make_map_string_long`     |
+| `Map<String, Float>`     | ✅ | ✅ | `std::unordered_map<std::string, float>`       | `jobject` | `extract_map_string_float` / `make_map_string_float`   |
+| `Map<String, Boolean>`   | ✅ | ✅ | `std::unordered_map<std::string, bool>`        | `jobject` | `extract_map_string_bool` / `make_map_string_bool`     |
 | `Map<Int, String>`       | ✅ | ✅ | `std::unordered_map<int32_t, std::string>`     | `jobject` | `extract_map_int_string` / `make_map_int_string`       |
 
 ## Complex types (not supported)
@@ -84,6 +88,8 @@ For return types the generated TODO body includes a comment like:
 | `Enum` (any named enum)   | ✅ | ✅ | Auto-detected: any `^[A-Z][A-Za-z0-9_]*$` type → `int32_t` ordinal via `enum_ordinal(env, obj)` |
 | `Set<String>`             | ✅ | ✅ | `std::unordered_set<std::string>` via `extract_set_string` / `make_set_string` |
 | `Set<Int>`                | ✅ | ✅ | `std::unordered_set<int32_t>` via `extract_set_int` / `make_set_int` |
+| `Set<Long>`               | ✅ | ✅ | `std::unordered_set<int64_t>` via `extract_set_long` / `make_set_long` |
+| `Set<Float>`              | ✅ | ✅ | `std::unordered_set<float>` via `extract_set_float` / `make_set_float` |
 | `Array<Int>`              | ✅ | ✅ | `jobjectArray` → `std::vector<int32_t>` via `extract_boxed_int_array` |
 | `Array<Long>`             | ✅ | ✅ | `jobjectArray` → `std::vector<int64_t>` via `extract_boxed_long_array` |
 | `Array<Float>`            | ✅ | ✅ | `jobjectArray` → `std::vector<float>` via `extract_boxed_float_array` |

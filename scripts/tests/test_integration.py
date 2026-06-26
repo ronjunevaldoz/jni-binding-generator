@@ -59,13 +59,20 @@ class NewEngine {
     external fun nativeGetBytes(handle: Long): List<Byte>
     external fun nativeGetChunks(handle: Long): List<List<String>>
 
+    external fun nativeGetShorts(handle: Long): List<Short>
+
     // Set variants
     external fun nativeGetKeySet(handle: Long): Set<String>
     external fun nativeGetIdSet(handle: Long): Set<Int>
+    external fun nativeGetHandleSet(handle: Long): Set<Long>
+    external fun nativeGetScoreSet(handle: Long): Set<Float>
 
     // Map variants
     external fun nativeGetMeta(handle: Long): Map<String, String>
     external fun nativeGetFreqs(handle: Long): Map<String, Int>
+    external fun nativeGetIdMap(handle: Long): Map<String, Long>
+    external fun nativeGetScoreMap(handle: Long): Map<String, Float>
+    external fun nativeGetFeatureFlags(handle: Long): Map<String, Boolean>
     external fun nativeGetLabels(handle: Long): Map<Int, String>
 
     // Enum (auto-detected PascalCase)

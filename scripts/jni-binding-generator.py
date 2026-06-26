@@ -129,6 +129,14 @@ TYPE_MAP = {
         "jobject", "std::unordered_set<std::string>", "extract_set_string({env}, {var})"
     ),
     "Set<Int>": TypeInfo("jobject", "std::unordered_set<int32_t>", "extract_set_int({env}, {var})"),
+    "Set<Long>": TypeInfo(
+        "jobject", "std::unordered_set<int64_t>", "extract_set_long({env}, {var})"
+    ),
+    "Set<Float>": TypeInfo(
+        "jobject", "std::unordered_set<float>", "extract_set_float({env}, {var})"
+    ),
+    # java.util.List — Short variant (completes the primitive family)
+    "List<Short>": TypeInfo("jobject", "std::vector<int16_t>", "extract_list_short({env}, {var})"),
     # java.util.Map variants
     "Map<String, String>": TypeInfo(
         "jobject",
@@ -139,6 +147,21 @@ TYPE_MAP = {
         "jobject",
         "std::unordered_map<std::string, int32_t>",
         "extract_map_string_int({env}, {var})",
+    ),
+    "Map<String, Long>": TypeInfo(
+        "jobject",
+        "std::unordered_map<std::string, int64_t>",
+        "extract_map_string_long({env}, {var})",
+    ),
+    "Map<String, Float>": TypeInfo(
+        "jobject",
+        "std::unordered_map<std::string, float>",
+        "extract_map_string_float({env}, {var})",
+    ),
+    "Map<String, Boolean>": TypeInfo(
+        "jobject",
+        "std::unordered_map<std::string, bool>",
+        "extract_map_string_bool({env}, {var})",
     ),
     "Map<Int, String>": TypeInfo(
         "jobject",
@@ -177,11 +200,17 @@ RETURN_MAP = {
     "Array<Long>": ("jobjectArray", "nullptr"),
     "Array<Float>": ("jobjectArray", "nullptr"),
     "Array<Double>": ("jobjectArray", "nullptr"),
+    "List<Short>": ("jobject", "nullptr"),
     "List<List<String>>": ("jobject", "nullptr"),
     "Set<String>": ("jobject", "nullptr"),
     "Set<Int>": ("jobject", "nullptr"),
+    "Set<Long>": ("jobject", "nullptr"),
+    "Set<Float>": ("jobject", "nullptr"),
     "Map<String, String>": ("jobject", "nullptr"),
     "Map<String, Int>": ("jobject", "nullptr"),
+    "Map<String, Long>": ("jobject", "nullptr"),
+    "Map<String, Float>": ("jobject", "nullptr"),
+    "Map<String, Boolean>": ("jobject", "nullptr"),
     "Map<Int, String>": ("jobject", "nullptr"),
     "Unit": ("void", ""),
     None: ("void", ""),
@@ -554,14 +583,20 @@ _MAKE_HELPER_MAP: dict[str, tuple[str, str]] = {
     "List<Double>": ("make_list_double", "std::vector<double>"),
     "List<Boolean>": ("make_list_bool", "std::vector<bool>"),
     "List<Byte>": ("make_list_byte", "std::vector<int8_t>"),
+    "List<Short>": ("make_list_short", "std::vector<int16_t>"),
     "List<List<String>>": ("make_list_list_string", "std::vector<std::vector<std::string>>"),
     "Set<String>": ("make_set_string", "std::unordered_set<std::string>"),
     "Set<Int>": ("make_set_int", "std::unordered_set<int32_t>"),
+    "Set<Long>": ("make_set_long", "std::unordered_set<int64_t>"),
+    "Set<Float>": ("make_set_float", "std::unordered_set<float>"),
     "Map<String, String>": (
         "make_map_string_string",
         "std::unordered_map<std::string, std::string>",
     ),
     "Map<String, Int>": ("make_map_string_int", "std::unordered_map<std::string, int32_t>"),
+    "Map<String, Long>": ("make_map_string_long", "std::unordered_map<std::string, int64_t>"),
+    "Map<String, Float>": ("make_map_string_float", "std::unordered_map<std::string, float>"),
+    "Map<String, Boolean>": ("make_map_string_bool", "std::unordered_map<std::string, bool>"),
     "Map<Int, String>": ("make_map_int_string", "std::unordered_map<int32_t, std::string>"),
 }
 

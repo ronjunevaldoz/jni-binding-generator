@@ -1,7 +1,7 @@
 # Unit testing guide
 
 All tests live under `scripts/tests/` and run with Python's built-in `unittest`
-(52 tests across 4 suites). No extra dependencies are required beyond a JDK
+(58 tests across 4 suites). No extra dependencies are required beyond a JDK
 (for the compilation test).
 
 ## Running the tests

@@ -197,5 +197,43 @@ class TestGeneration(unittest.TestCase):
         self.assertEqual(content.count('extern "C"'), 4)
 
 
+class TestNewTypeFamily(unittest.TestCase):
+    def _gen(self, kotlin_type: str) -> str:
+        parsed = gen.parse_kotlin_source(
+            f"package a\nclass N {{ external fun f(x: {kotlin_type}): {kotlin_type} }}"
+        )
+        return gen.generate_function(parsed, parsed.functions[0])
+
+    def test_list_short_param_and_return(self):
+        out = self._gen("List<Short>")
+        self.assertIn("extract_list_short(env, x)", out)
+        self.assertIn("make_list_short", out)
+
+    def test_set_long_param_and_return(self):
+        out = self._gen("Set<Long>")
+        self.assertIn("extract_set_long(env, x)", out)
+        self.assertIn("make_set_long", out)
+
+    def test_set_float_param_and_return(self):
+        out = self._gen("Set<Float>")
+        self.assertIn("extract_set_float(env, x)", out)
+        self.assertIn("make_set_float", out)
+
+    def test_map_string_long_param_and_return(self):
+        out = self._gen("Map<String, Long>")
+        self.assertIn("extract_map_string_long(env, x)", out)
+        self.assertIn("make_map_string_long", out)
+
+    def test_map_string_float_param_and_return(self):
+        out = self._gen("Map<String, Float>")
+        self.assertIn("extract_map_string_float(env, x)", out)
+        self.assertIn("make_map_string_float", out)
+
+    def test_map_string_bool_param_and_return(self):
+        out = self._gen("Map<String, Boolean>")
+        self.assertIn("extract_map_string_bool(env, x)", out)
+        self.assertIn("make_map_string_bool", out)
+
+
 if __name__ == "__main__":
     unittest.main()
