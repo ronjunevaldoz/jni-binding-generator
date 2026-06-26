@@ -9,6 +9,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.3] — 2026-06-26
+
+### Fixed
+- `--ios-cinterop`: `.def` and `include/*.h` files were rewritten unconditionally on
+  every run, resetting their mtimes even when content was unchanged.  Now applies the
+  same read-before-write guard used for `.gen.cpp` outputs so repeated runs are
+  truly incremental.
+
+### Added
+- `TestIosCinterop` in `test_driver.py` extended with 3 new cases: `.def`
+  `headers`/`headerFilter` lines present, package comment in `.def`, and a
+  mtime-stability assertion that locks in the incremental behaviour.
+- `TestTypeMap`, `TestDiffMode`, `TestVerboseMode`, `TestPackageFilter` driver
+  test classes documented in `docs/unit-testing.md`.
+
+### Changed
+- Test count: 137 → 140
+
+---
+
 ## [1.2.2] — 2026-06-26
 
 ### Fixed
