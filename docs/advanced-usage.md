@@ -406,6 +406,76 @@ are skipped without error.
 When the flag is absent, every `external fun` in every discovered `.kt` file is
 included.
 
+## Strict type checking (`--strict-types`)
+
+By default the reverse generator (`--kotlin-from-header`) emits a `Long /* TODO: TypeName */`
+placeholder for any C type it cannot map. This is convenient during exploration but
+can silently reach production. Pass `--strict-types` to turn unmapped types into a
+hard error (exit code 2) so CI catches them early:
+
+```bash
+python3 scripts/jni-binding-generator.py \
+    --kotlin-from-header include/engine.h \
+    --output src/main/kotlin \
+    --kotlin-package com.example \
+    --strict-types
+```
+
+Combine with `--dry-run` to validate a header without writing any files:
+
+```bash
+python3 scripts/jni-binding-generator.py \
+    --kotlin-from-header include/engine.h \
+    --output /tmp/out \
+    --kotlin-package com.example \
+    --strict-types --dry-run
+```
+
+The flag only applies to `--kotlin-from-header` mode. Forward-pass (`--kotlin-source`)
+unknown types already hard-error regardless of this flag.
+
+---
+
+## Quality scorecard (`--score`)
+
+`--score` analyses all generated files in the standard example directories and prints
+a weighted quality score (0–100). It does not require `--output`:
+
+```bash
+python3 scripts/jni-binding-generator.py --score
+```
+
+Sample output:
+```
+  +-----------------------------------------------------------+
+  |          JNI Binding Generator -- Quality Score            |
+  +-----------------+-------------------------------------------+
+  | type_coverage   | ############################## 100.0% |
+  | null_safety     | ############################## 100.0% |
+  | string_safety   | ############################## 100.0% |
+  | strict_clean    | ############################## 100.0% |
+  +-----------------+-------------------------------------------+
+  | Overall score:  100.0 / 100                           |
+  +-----------------+-------------------------------------------+
+  | Functions:  38      Params: 46      TODOs: 0       |
+  +-----------------------------------------------------------+
+```
+
+**Dimensions:**
+
+| Dimension | Weight | What it measures |
+|---|---|---|
+| `type_coverage` | 35% | Fraction of params/returns using non-TODO mapped types |
+| `null_safety` | 30% | Fraction of handle params with a null-check guard |
+| `string_safety` | 20% | Fraction of String params with an empty-string guard |
+| `strict_clean` | 15% | 1.0 if zero TODO-typed fields, 0.0 if any exist |
+
+The overall score is the weighted average of the four dimensions. A score below 100
+signals a concrete gap: look at which dimension dropped and address the root cause
+(unmapped type, missing null-guard, or missing string guard).
+
+---
+
 ## Unsupported Kotlin constructs
 
 The generator hard-errors on constructs it cannot safely translate:

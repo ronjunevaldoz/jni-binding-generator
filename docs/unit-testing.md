@@ -1,7 +1,7 @@
 # Unit testing guide
 
 All tests live under `scripts/tests/` and run with Python's built-in `unittest`
-(207 tests across 6 suites). No extra dependencies are required beyond a JDK
+(216 tests across 6 suites). No extra dependencies are required beyond a JDK
 (for the compilation test).
 
 ## Running the tests
@@ -91,6 +91,8 @@ Tests `main()` end-to-end using real temp directories. Covers the full write
 | `TestVerboseMode` | `--verbose` prints class and function names to stdout |
 | `TestPackageFilter` | `--package-filter` restricts output to matching packages; all packages included when flag is absent |
 | `TestIosCinterop` | `--ios-cinterop` writes `.def` and `include/*.h` files; header contains C types; `.def` has `headers`/`headerFilter` lines and package comment; second run is incremental (mtime unchanged); `--check` and `--dry-run` never write cinterop files |
+| `TestStrictTypes` | `--strict-types` passes on a fully-mapped header, exits `EXIT_PARSE` on an unknown type, does nothing without the flag |
+| `TestScoreCommand` | `--score` exits `EXIT_OK` and does not require `--output` |
 
 ### `test_memory.py` — JNI local-reference static analysis
 
@@ -108,6 +110,7 @@ acquisition is paired with a matching release. No runtime JVM required.
 | `TestExtractMakeHelpersHaveCleanup` | Every `extract_*/make_*` that creates local refs has a `DeleteLocalRef` |
 | `TestNestedListHelpers` | All 16 `extract/make_list_list_*` helpers release inner-list refs and class refs |
 | `TestBoxedArrayHelpers` | `extract_boxed_*_array` helpers delete each element ref and the class ref |
+| `TestJniUtilsQuality` | Every `env->NewObject(…)` call in a `make_*` helper is immediately followed by a null-guard `if (!var) return nullptr;` (EP-6b invariant) |
 | `TestHeaderPresent` | Smoke test: header exists, is non-empty, and has >20 helpers |
 
 Helpers using `Get*ArrayRegion` (primitive arrays copied into a C buffer, no local ref

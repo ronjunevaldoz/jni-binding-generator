@@ -9,6 +9,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.6.4] — 2026-06-26
+
+### Docs
+- **`advanced-usage.md`** — added `--strict-types` and `--score` sections (both
+  flags shipped in v1.6.0 but were undocumented in the usage guide).
+- **`unit-testing.md`** — updated test count from 207 → 216; added rows for
+  `TestStrictTypes`, `TestScoreCommand`, and `TestJniUtilsQuality` to the suite
+  reference table.
+
+---
+
 ## [1.6.3] — 2026-06-26
 
 ### Added
