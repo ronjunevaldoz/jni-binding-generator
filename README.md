@@ -17,7 +17,7 @@ incremental writes, drift detection, and comprehensive docs.
 | Area | Detail |
 |---|---|
 | **Type coverage** | All Kotlin primitives, `String`, all `*Array` variants, `List<T>`, `Set<T>`, `Map<K,V>`, nested collections, enums |
-| **Tests** | 82 unit tests across 4 suites + compile-check integration test against real JDK headers |
+| **Tests** | 99 unit tests across 5 suites + compile-check integration test against real JDK headers |
 | **Docs** | [Type matrix](docs/type-support-matrix.md) · [Memory management](docs/memory-management.md) · [Unit testing](docs/unit-testing.md) · [Advanced usage](docs/advanced-usage.md) |
 | **CI / hooks** | Pre-commit: ruff lint + unit tests + drift check |
 | **Gradle** | Raw `Exec` task or typed `jniGenerator { bindings { ... } }` convention plugin |
@@ -182,6 +182,7 @@ jni-binding-generator/
 │       ├── test_parser.py              # Parser + JNI name-mangling tests
 │       ├── test_generator.py           # Code-generation + compile-check tests
 │       ├── test_driver.py              # CLI driver: incremental writes, --check, --generate-tests
+│       ├── test_memory.py              # Static-analysis: local-ref lifecycle in jni-utils.h
 │       └── test_integration.py         # Compile test against real JDK headers (all types)
 ├── examples/
 │   ├── sample-binding/                 # Reference: single-module example

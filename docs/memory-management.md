@@ -96,6 +96,47 @@ void JNI_OnUnload(JavaVM* vm, void*) {
 }
 ```
 
+## Automated memory-safety tests
+
+`scripts/tests/test_memory.py` runs static analysis over every helper in `jni-utils.h`
+at CI time. It checks:
+
+| Test class | What it verifies |
+|---|---|
+| `TestGetStringUTFCharsLifecycle` | Every `GetStringUTFChars` is paired with `ReleaseStringUTFChars` (EP-6) |
+| `TestFindClassBalance` | `DeleteLocalRef` count ≥ `FindClass` count per function |
+| `TestGetObjectArrayElementRelease` | Every `GetObjectArrayElement` result has a matching `DeleteLocalRef` |
+| `TestNewStringUTFInLoop` | `NewStringUTF` inside a loop → `DeleteLocalRef` present |
+| `TestBoxedObjectCreationInLoop` | `CallStaticObjectMethod` inside a loop → `DeleteLocalRef` present |
+| `TestIteratorLoopCleanup` | Iterator-loop (`hasNextM`) functions delete `entry`/key/value and the iterator itself |
+| `TestExtractMakeHelpersHaveCleanup` | Every `extract_*/make_*` that creates local refs has a `DeleteLocalRef` |
+| `TestNestedListHelpers` | All 10 `extract/make_list_list_*` helpers release inner-list refs and class refs |
+| `TestBoxedArrayHelpers` | `extract_boxed_*_array` helpers delete each element ref and the class ref |
+
+Helpers that use `Get*ArrayRegion` (primitive arrays copied into a C buffer without creating
+local refs) are correctly excluded from the `DeleteLocalRef` coverage check.
+
+## Per-helper leak status
+
+Full audit completed 2026-06-26. All helpers verified clean:
+
+| Helper family | Count | Local refs released | Notes |
+|---|---|---|---|
+| `extract_*_array` (primitive, region-copy) | 7 | N/A | `Get*ArrayRegion` — no local refs created |
+| `extract_string_array` | 1 | ✅ | `DeleteLocalRef(element)` per-element (EP-6b) |
+| `extract_list_*` | 11 | ✅ | `DeleteLocalRef(elem)` in loop + all class refs |
+| `make_list_*` | 11 | ✅ | `DeleteLocalRef(boxed)` in loop + all class refs |
+| `extract_set_*` | 6 | ✅ | `DeleteLocalRef(elem)` + `iter` + all class refs |
+| `make_set_*` | 6 | ✅ | `DeleteLocalRef(boxed)` + all class refs |
+| `extract_map_*` | 10 | ✅ | `DeleteLocalRef(entry/k/v)` in loop + `iter`/`entrySet` + all class refs |
+| `make_map_*` | 10 | ✅ | `DeleteLocalRef(prev)` if non-null + `jk`/`jv` in loop + all class refs |
+| `extract_boxed_*_array` | 3 | ✅ | `DeleteLocalRef(elem)` per-element + class ref |
+| `extract_list_list_*` | 5 | ✅ | `DeleteLocalRef(inner)` per iteration + `listCls` |
+| `make_list_list_*` | 5 | ✅ | `DeleteLocalRef(innerList)` per iteration + `cls` |
+| `jstring2string` | 1 | ✅ | `ReleaseStringUTFChars` in try + catch (EP-6a) |
+| `throw_java_exception` | 1 | ✅ | `DeleteLocalRef(clazz)` after `ThrowNew` |
+| `enum_ordinal` | 1 | ✅ | `DeleteLocalRef(cls)` |
+
 ## Summary
 
 | Scenario | What to do |
