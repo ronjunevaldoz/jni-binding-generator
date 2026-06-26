@@ -9,6 +9,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.2] — 2026-06-26
+
+### Added
+- **`examples/android-binding` — full C→Kotlin→C++ round-trip demo:**
+  - New `include/image_classifier.h` — concrete C API header as `--kotlin-from-header` input.
+  - `src/ImageClassifier.kt` is now **auto-generated** from the header (Phase 1).
+  - `build.gradle.kts` gains three `jni` group tasks: `generateKotlinFromHeader`
+    (Phase 1), `generateJniBindings` (Phase 2), and `generateAll` (both in order).
+  - README updated with the two-phase pipeline diagram and per-task docs.
+- **`examples/kmp-binding` — convention plugin + app entry points:**
+  - `build-logic/` — local copy of `gradle-integration/build-logic`; exposes
+    `id("jni-generator")` without publishing to a plugin portal.
+  - `settings.gradle.kts` now includes the build-logic via `includeBuild("build-logic")`.
+  - `shared/build.gradle.kts` switched from raw `Exec` tasks to the typed DSL:
+    `jniGenerator { bindings { register("android") { … } register("desktop") { … } } }`.
+  - `androidApp/src/main/kotlin/…/MainActivity.kt` — Compose Activity entry point.
+  - `androidApp/src/main/AndroidManifest.xml`.
+  - `desktopApp/src/desktopMain/kotlin/…/Main.kt` — Compose Desktop entry point.
+  - `gradle/wrapper/gradle-wrapper.properties` + `gradlew` / `gradlew.bat` —
+    project is now bootstrappable without a pre-installed Gradle.
+  - README rewritten to document the plugin DSL, all Gradle tasks, and platform targets.
+
+---
+
 ## [1.5.1] — 2026-06-26
 
 ### Added

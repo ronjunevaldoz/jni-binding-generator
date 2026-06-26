@@ -15,9 +15,9 @@
 
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_com_example_android_classifier_ImageClassifier_nativeCreate(
+Java_com_example_android_classifier_ImageClassifier_imageClassifierCreate(
         JNIEnv* env,
-        jobject thiz,
+        jclass clazz,
         jstring modelPath,
         jint threads,
         jboolean useGpu) {
@@ -29,7 +29,7 @@ Java_com_example_android_classifier_ImageClassifier_nativeCreate(
 
     // --- Error handling ---
     if (modelPath_val.empty()) {
-        throw_illegal_argument(env, "nativeCreate: modelPath is required");
+        throw_illegal_argument(env, "imageClassifierCreate: modelPath is required");
         return 0;
     }
 
@@ -39,89 +39,149 @@ Java_com_example_android_classifier_ImageClassifier_nativeCreate(
 }
 
 
-extern "C" JNIEXPORT jfloatArray JNICALL
-Java_com_example_android_classifier_ImageClassifier_nativeClassify(
+extern "C" JNIEXPORT void JNICALL
+Java_com_example_android_classifier_ImageClassifier_imageClassifierDestroy(
         JNIEnv* env,
-        jobject thiz,
-        jlong handle,
-        jbyteArray rgbaPixels,
-        jint width,
-        jint height) {
+        jclass clazz,
+        jlong handle) {
     // --- Marshalling ---
     void* handle_ptr = reinterpret_cast<void*>(handle);
-    std::vector<uint8_t> rgbaPixels_val = extract_byte_array(env, rgbaPixels);
-    if (env->ExceptionCheck()) return nullptr;
+
+    // --- Error handling ---
+    if (!handle_ptr) {
+        throw_illegal_state(env, "imageClassifierDestroy: handle not initialized");
+        return;
+    }
+
+    // --- TODO: hand-written native logic ---
+    // Call into your native library using the marshalled values above.
+    return;
+}
+
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_example_android_classifier_ImageClassifier_imageClassifierClassify(
+        JNIEnv* env,
+        jclass clazz,
+        jlong handle,
+        jbyteArray pixels,
+        jint width,
+        jint height,
+        jfloatArray scores,
+        jint numClasses) {
+    // --- Marshalling ---
+    void* handle_ptr = reinterpret_cast<void*>(handle);
+    std::vector<uint8_t> pixels_val = extract_byte_array(env, pixels);
+    if (env->ExceptionCheck()) return 0;
     int32_t width_val = static_cast<int32_t>(width);
     int32_t height_val = static_cast<int32_t>(height);
+    std::vector<float> scores_val = extract_float_array(env, scores);
+    if (env->ExceptionCheck()) return 0;
+    int32_t numClasses_val = static_cast<int32_t>(numClasses);
 
     // --- Error handling ---
     if (!handle_ptr) {
-        throw_illegal_state(env, "nativeClassify: handle not initialized");
-        return nullptr;
+        throw_illegal_state(env, "imageClassifierClassify: handle not initialized");
+        return 0;
     }
 
     // --- TODO: hand-written native logic ---
     // Call into your native library using the marshalled values above.
-    return nullptr;
+    return 0;
 }
 
 
-extern "C" JNIEXPORT jobject JNICALL
-Java_com_example_android_classifier_ImageClassifier_nativeGetLabels(
+extern "C" JNIEXPORT jint JNICALL
+Java_com_example_android_classifier_ImageClassifier_imageClassifierNumClasses(
         JNIEnv* env,
-        jobject thiz,
+        jclass clazz,
         jlong handle) {
     // --- Marshalling ---
     void* handle_ptr = reinterpret_cast<void*>(handle);
 
     // --- Error handling ---
     if (!handle_ptr) {
-        throw_illegal_state(env, "nativeGetLabels: handle not initialized");
-        return nullptr;
+        throw_illegal_state(env, "imageClassifierNumClasses: handle not initialized");
+        return 0;
     }
 
     // --- TODO: hand-written native logic ---
     // Call into your native library using the marshalled values above.
-    // Return: use make_list_string(env, yourResult) to build the jobject.
-    return nullptr;
+    return 0;
 }
 
 
-extern "C" JNIEXPORT jobject JNICALL
-Java_com_example_android_classifier_ImageClassifier_nativeGetMetadata(
+extern "C" JNIEXPORT jint JNICALL
+Java_com_example_android_classifier_ImageClassifier_imageClassifierGetLabel(
         JNIEnv* env,
-        jobject thiz,
+        jclass clazz,
+        jlong handle,
+        jint classIndex,
+        jstring buf,
+        jint bufLen) {
+    // --- Marshalling ---
+    void* handle_ptr = reinterpret_cast<void*>(handle);
+    int32_t classIndex_val = static_cast<int32_t>(classIndex);
+    std::string buf_val = jstring2string(env, buf);
+    if (env->ExceptionCheck()) return 0;
+    int32_t bufLen_val = static_cast<int32_t>(bufLen);
+
+    // --- Error handling ---
+    if (!handle_ptr) {
+        throw_illegal_state(env, "imageClassifierGetLabel: handle not initialized");
+        return 0;
+    }
+    if (buf_val.empty()) {
+        throw_illegal_argument(env, "imageClassifierGetLabel: buf is required");
+        return 0;
+    }
+
+    // --- TODO: hand-written native logic ---
+    // Call into your native library using the marshalled values above.
+    return 0;
+}
+
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_example_android_classifier_ImageClassifier_imageClassifierVersion(
+        JNIEnv* env,
+        jclass clazz,
         jlong handle) {
     // --- Marshalling ---
     void* handle_ptr = reinterpret_cast<void*>(handle);
 
     // --- Error handling ---
     if (!handle_ptr) {
-        throw_illegal_state(env, "nativeGetMetadata: handle not initialized");
+        throw_illegal_state(env, "imageClassifierVersion: handle not initialized");
         return nullptr;
     }
 
     // --- TODO: hand-written native logic ---
     // Call into your native library using the marshalled values above.
-    // Return: use make_map_string_string(env, yourResult) to build the jobject.
     return nullptr;
 }
 
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_android_classifier_ImageClassifier_nativeSetOptions(
+Java_com_example_android_classifier_ImageClassifier_imageClassifierSetOption(
         JNIEnv* env,
-        jobject thiz,
+        jclass clazz,
         jlong handle,
-        jobject options) {
+        jstring key,
+        jfloat value) {
     // --- Marshalling ---
     void* handle_ptr = reinterpret_cast<void*>(handle);
-    std::unordered_map<std::string, float> options_val = extract_map_string_float(env, options);
+    std::string key_val = jstring2string(env, key);
     if (env->ExceptionCheck()) return;
+    float value_val = static_cast<float>(value);
 
     // --- Error handling ---
     if (!handle_ptr) {
-        throw_illegal_state(env, "nativeSetOptions: handle not initialized");
+        throw_illegal_state(env, "imageClassifierSetOption: handle not initialized");
+        return;
+    }
+    if (key_val.empty()) {
+        throw_illegal_argument(env, "imageClassifierSetOption: key is required");
         return;
     }
 
@@ -131,44 +191,28 @@ Java_com_example_android_classifier_ImageClassifier_nativeSetOptions(
 }
 
 
-extern "C" JNIEXPORT jobject JNICALL
-Java_com_example_android_classifier_ImageClassifier_nativeTopK(
+extern "C" JNIEXPORT jfloat JNICALL
+Java_com_example_android_classifier_ImageClassifier_imageClassifierGetOption(
         JNIEnv* env,
-        jobject thiz,
+        jclass clazz,
         jlong handle,
-        jint k) {
+        jstring key) {
     // --- Marshalling ---
     void* handle_ptr = reinterpret_cast<void*>(handle);
-    int32_t k_val = static_cast<int32_t>(k);
+    std::string key_val = jstring2string(env, key);
+    if (env->ExceptionCheck()) return 0.0f;
 
     // --- Error handling ---
     if (!handle_ptr) {
-        throw_illegal_state(env, "nativeTopK: handle not initialized");
-        return nullptr;
+        throw_illegal_state(env, "imageClassifierGetOption: handle not initialized");
+        return 0.0f;
+    }
+    if (key_val.empty()) {
+        throw_illegal_argument(env, "imageClassifierGetOption: key is required");
+        return 0.0f;
     }
 
     // --- TODO: hand-written native logic ---
     // Call into your native library using the marshalled values above.
-    // Return: use make_map_string_float(env, yourResult) to build the jobject.
-    return nullptr;
-}
-
-
-extern "C" JNIEXPORT void JNICALL
-Java_com_example_android_classifier_ImageClassifier_nativeDestroy(
-        JNIEnv* env,
-        jobject thiz,
-        jlong handle) {
-    // --- Marshalling ---
-    void* handle_ptr = reinterpret_cast<void*>(handle);
-
-    // --- Error handling ---
-    if (!handle_ptr) {
-        throw_illegal_state(env, "nativeDestroy: handle not initialized");
-        return;
-    }
-
-    // --- TODO: hand-written native logic ---
-    // Call into your native library using the marshalled values above.
-    return;
+    return 0.0f;
 }

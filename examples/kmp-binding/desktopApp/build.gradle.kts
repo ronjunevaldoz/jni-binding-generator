@@ -21,7 +21,7 @@ kotlin {
 
 compose.desktop {
     application {
-        mainClass = "com.example.kmmbinding.desktop.MainKt"
+        mainClass = "com.example.kmmbinding.desktop.MainKt"  // Main.kt in desktopMain
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "kmp-binding-demo"

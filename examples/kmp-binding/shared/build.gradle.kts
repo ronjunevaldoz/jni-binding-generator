@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.library)
+    id("jni-generator")  // from build-logic — typed DSL for JNI binding generation
 }
 
 kotlin {
@@ -40,37 +41,34 @@ android {
 }
 
 // ---------------------------------------------------------------------------
-// JNI binding generation
-// Run the generator against each JVM-targeted source set that has external fun
-// declarations.  The generator reads Kotlin source; CMake picks up the output.
+// JNI binding generation — using the typed convention plugin (id("jni-generator"))
+//
+// The plugin registers:
+//   * generateJniBindingsAndroid   — androidMain → androidApp/…/generated
+//   * generateJniBindingsDesktop   — desktopMain → desktopApp/…/generated
+//   * generateJniBindings          — aggregate (runs both)
+//
+// Gradle tracks inputs (Kotlin source + generator script) and outputs (generated
+// dir) so tasks are skipped when nothing changed.
 // ---------------------------------------------------------------------------
 
-val generatorScript = rootProject.file("../../scripts/jni-binding-generator.py")
+jniGenerator {
+    generatorScript = rootProject.file("../../scripts/jni-binding-generator.py")
 
-tasks.register<Exec>("generateJniAndroid") {
-    group = "build"
-    description = "Regenerate JNI C++ bindings for the androidMain source set"
-    commandLine(
-        "python3", generatorScript.absolutePath,
-        "--kotlin-source",
-        layout.projectDirectory.dir("src/androidMain/kotlin").asFile.absolutePath,
-        "--output",
-        rootProject.file("androidApp/src/main/cpp/generated").absolutePath,
-    )
+    bindings {
+        register("android") {
+            kotlinSource = layout.projectDirectory.dir("src/androidMain/kotlin")
+            outputDir    = rootProject.layout.projectDirectory.dir("androidApp/src/main/cpp/generated")
+        }
+        register("desktop") {
+            kotlinSource = layout.projectDirectory.dir("src/desktopMain/kotlin")
+            outputDir    = rootProject.layout.projectDirectory.dir("desktopApp/src/jvmMain/cpp/generated")
+        }
+    }
 }
 
-tasks.register<Exec>("generateJniDesktop") {
-    group = "build"
-    description = "Regenerate JNI C++ bindings for the desktop (jvmMain) source set"
-    commandLine(
-        "python3", generatorScript.absolutePath,
-        "--kotlin-source",
-        layout.projectDirectory.dir("src/desktopMain/kotlin").asFile.absolutePath,
-        "--output",
-        rootProject.file("desktopApp/src/jvmMain/cpp/generated").absolutePath,
-    )
-}
-
+// Wire generation to run before the Android preBuild lifecycle task so the
+// C++ stubs are always present before CMake is invoked.
 tasks.named("preBuild") {
-    dependsOn("generateJniAndroid", "generateJniDesktop")
+    dependsOn("generateJniBindings")
 }

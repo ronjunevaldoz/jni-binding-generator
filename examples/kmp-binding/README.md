@@ -6,43 +6,84 @@ a KMP module that targets Android, Desktop (JVM), and iOS.
 ## Structure
 
 ```
+build-logic/                         ← copy of gradle-integration/build-logic
+    convention/
+        src/main/kotlin/
+            jni-generator.gradle.kts ← id("jni-generator") convention plugin
 shared/src/
-  commonMain/   NativeBridge.kt          — expect class (platform-agnostic API)
+  commonMain/   NativeBridge.kt          — expect class (cross-platform API)
   androidMain/  NativeBridgeJni.kt       — external fun declarations (generator input)
                 NativeBridge.android.kt  — actual class delegating to JNI
   desktopMain/  NativeBridgeJni.kt       — external fun declarations (generator input)
                 NativeBridge.desktop.kt  — actual class delegating to JNI
   iosMain/      NativeBridge.ios.kt      — actual class using Kotlin/Native cinterop
-
-androidApp/src/main/cpp/generated/       — generated JNI stubs (Android)
-desktopApp/src/jvmMain/cpp/generated/    — generated JNI stubs (Desktop JVM)
+androidApp/
+  src/main/
+    kotlin/…/MainActivity.kt            — Compose entry point
+    AndroidManifest.xml
+    cpp/
+      generated/NativeBridgeJni_jni.gen.cpp   ← generated JNI stubs (Android)
+desktopApp/
+  src/desktopMain/kotlin/…/Main.kt     — Compose Desktop entry point
+  src/jvmMain/cpp/
+    generated/NativeBridgeJni_jni.gen.cpp     ← generated JNI stubs (Desktop JVM)
+iosApp/src/nativeInterop/cinterop/    ← cinterop .def + C header skeleton
 ```
 
-## Input
+## Convention plugin
 
-`shared/src/androidMain/kotlin/…/NativeBridgeJni.kt` — eleven `external fun`
-declarations wrapping a language model inference library.
+`shared/build.gradle.kts` applies `id("jni-generator")` from the local
+`build-logic` included build (a copy of `gradle-integration/build-logic` from
+the repo root).  The plugin provides a typed DSL instead of hand-rolled `Exec`
+tasks:
 
-`shared/src/desktopMain/kotlin/…/NativeBridgeJni.kt` — same declarations for
-the Desktop JVM target (identical API, separate `System.loadLibrary` call).
+```kotlin
+jniGenerator {
+    generatorScript = rootProject.file("../../scripts/jni-binding-generator.py")
 
-## Output
+    bindings {
+        register("android") {
+            kotlinSource = layout.projectDirectory.dir("src/androidMain/kotlin")
+            outputDir    = rootProject.layout.projectDirectory.dir("androidApp/src/main/cpp/generated")
+        }
+        register("desktop") {
+            kotlinSource = layout.projectDirectory.dir("src/desktopMain/kotlin")
+            outputDir    = rootProject.layout.projectDirectory.dir("desktopApp/src/jvmMain/cpp/generated")
+        }
+    }
+}
+```
 
-`androidApp/src/main/cpp/generated/NativeBridgeJni_jni.gen.cpp`
-`desktopApp/src/jvmMain/cpp/generated/NativeBridgeJni_jni.gen.cpp`
+This registers:
+- `generateJniBindingsAndroid` — androidMain → androidApp/…/generated
+- `generateJniBindingsDesktop` — desktopMain → desktopApp/…/generated
+- `generateJniBindings` — aggregate (runs both)
 
-Both files share the same structure: `Java_*` entry points with marshalling
-helpers from `jni-utils.h` and TODO bodies for the native implementation.
+Gradle tracks inputs (Kotlin source + generator script) and output dirs so
+tasks are **skipped when nothing changed** — no unnecessary CMake cache invalidation.
 
 ## Regenerate
 
 ```bash
-# Android target
+# Both targets at once (via the plugin aggregate task)
+./gradlew :shared:generateJniBindings
+
+# Android only
+./gradlew :shared:generateJniBindingsAndroid
+
+# Desktop only
+./gradlew :shared:generateJniBindingsDesktop
+```
+
+Or call the Python CLI directly:
+
+```bash
+# Android
 python3 scripts/jni-binding-generator.py \
     --kotlin-source examples/kmp-binding/shared/src/androidMain/kotlin \
     --output examples/kmp-binding/androidApp/src/main/cpp/generated
 
-# Desktop JVM target
+# Desktop JVM
 python3 scripts/jni-binding-generator.py \
     --kotlin-source examples/kmp-binding/shared/src/desktopMain/kotlin \
     --output examples/kmp-binding/desktopApp/src/jvmMain/cpp/generated
@@ -65,12 +106,17 @@ python3 scripts/jni-binding-generator.py \
 ## iOS target
 
 The `iosMain` actual does **not** use JNI — it calls into a native C library via
-Kotlin/Native cinterop. Use the `--ios-cinterop` flag to generate the `.def` file
-and C header skeleton:
+Kotlin/Native cinterop.  Use `--ios-cinterop` to generate the `.def` and header:
 
 ```bash
 python3 scripts/jni-binding-generator.py \
     --kotlin-source examples/kmp-binding/shared/src/androidMain/kotlin \
-    --output /tmp/kmp-generated \
-    --ios-cinterop /tmp/kmp-cinterop
+    --output examples/kmp-binding/androidApp/src/main/cpp/generated \
+    --ios-cinterop examples/kmp-binding/iosApp/src/nativeInterop/cinterop
 ```
+
+Then:
+1. Edit the generated `include/NativeBridgeJni.h` to match your real C API.
+2. Fill in `staticLibraries` / `libraryPaths` in `NativeBridgeJni.def`.
+3. Wire the cinterop in `shared/build.gradle.kts` (see `iosApp/README.md`).
+4. Replace stub bodies in `NativeBridge.ios.kt` with cinterop calls.

@@ -120,7 +120,7 @@ python3 scripts/jni-binding-generator.py \
     --ios-cinterop iosApp/src/nativeInterop/cinterop
 ```
 
-See [`examples/android-binding/`](examples/android-binding/) for an Android-only project with `build.gradle.kts` and `CMakeLists.txt`, or [`examples/kmp-binding/`](examples/kmp-binding/) for a Kotlin Multiplatform setup.
+See [`examples/android-binding/`](examples/android-binding/) for an Android-only project demonstrating the full C→Kotlin→C++ round-trip (`--kotlin-from-header` + forward pass, wired as Gradle tasks), or [`examples/kmp-binding/`](examples/kmp-binding/) for a Kotlin Multiplatform setup using the `id("jni-generator")` convention plugin with Android, Desktop, and iOS targets.
 
 ## What This Is
 
@@ -204,20 +204,28 @@ jni-binding-generator/
 │   │   └── generated/
 │   │       ├── SampleEngine_jni.gen.cpp
 │   │       └── SampleEngine_jni_test.gen.cpp
-│   ├── android-binding/                # Android-only example (build.gradle.kts + CMakeLists.txt)
-│   │   ├── src/ImageClassifier.kt
-│   │   ├── build.gradle.kts
+│   ├── android-binding/                # Android-only example — full C→Kotlin→C++ round-trip
+│   │   ├── include/image_classifier.h  # C API (--kotlin-from-header input)
+│   │   ├── src/ImageClassifier.kt      # generated Kotlin stubs (Phase 1 output / Phase 2 input)
+│   │   ├── build.gradle.kts            # generateKotlinFromHeader + generateJniBindings tasks
 │   │   ├── CMakeLists.txt
 │   │   └── generated/
 │   │       └── ImageClassifier_jni.gen.cpp
-│   └── kmp-binding/                    # Kotlin Multiplatform example
+│   └── kmp-binding/                    # KMP example — Android + Desktop + iOS
+│       ├── build-logic/                # Local copy of gradle-integration/build-logic
+│       │   └── convention/…/jni-generator.gradle.kts   # id("jni-generator") plugin
 │       ├── shared/src/
 │       │   ├── commonMain/  NativeBridge.kt         (expect class)
 │       │   ├── androidMain/ NativeBridgeJni.kt      (external fun → JNI)
 │       │   ├── iosMain/     NativeBridge.ios.kt     (Kotlin/Native cinterop stub)
 │       │   └── desktopMain/ NativeBridgeJni.kt      (external fun → JNI)
-│       ├── androidApp/src/main/cpp/generated/       (generated JNI bindings)
-│       └── desktopApp/src/jvmMain/cpp/generated/    (generated JNI bindings)
+│       ├── androidApp/
+│       │   ├── src/main/kotlin/…/MainActivity.kt    (Compose entry point)
+│       │   └── src/main/cpp/generated/              (generated JNI bindings)
+│       ├── desktopApp/
+│       │   ├── src/desktopMain/kotlin/…/Main.kt     (Compose Desktop entry point)
+│       │   └── src/jvmMain/cpp/generated/           (generated JNI bindings)
+│       └── iosApp/src/nativeInterop/cinterop/       (cinterop .def + header)
 ├── gradle-integration/                 # Run the generator from Gradle
 │   ├── README.md                       # Raw-task and convention-plugin options
 │   └── build-logic/                    # Precompiled `id("jni-generator")` plugin
