@@ -135,7 +135,9 @@ All helpers verified clean. Static regression tests in `test_memory.py` guard ev
 | `extract_list_list_*` | 8 | ✅ | `DeleteLocalRef(inner)` per iteration + `listCls` |
 | `make_list_list_*` | 8 | ✅ | `DeleteLocalRef(innerList)` per iteration + `cls` |
 | `jstring2string` | 1 | ✅ | `ReleaseStringUTFChars` in try + catch (EP-6a) |
+| `string2jstring` | 1 | N/A | Calls `NewStringUTF`; returns local ref directly to caller — caller owns it |
 | `throw_java_exception` | 1 | ✅ | `DeleteLocalRef(clazz)` after `ThrowNew` |
+| `throw_illegal_state` / `throw_illegal_argument` / `throw_runtime` | 3 | N/A | Thin wrappers over `throw_java_exception`; no additional local refs |
 | `enum_ordinal` | 1 | ✅ | `DeleteLocalRef(cls)` |
 
 ## Summary

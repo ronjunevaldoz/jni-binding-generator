@@ -19,6 +19,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Test count: 113 → 137
+- `docs/type-support-matrix.md` — complete overhaul: all 66 types now documented in
+  dedicated sections (Array<T>, List<List<T>>, Set<T>, Map<K,V>); added Enums and
+  Unsupported types sections; removed misleading "Complex types" heading
+- `docs/memory-management.md` — added `string2jstring` and `throw_illegal_*` to the
+  per-helper leak status table for complete helper coverage
 
 ---
 
