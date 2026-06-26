@@ -9,6 +9,49 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.3] — 2026-06-26
+
+### Fixed
+- **Release archive was missing all seven submodules** — `release.yml` tar only
+  included `jni-binding-generator.py`, `__init__.py`, and `jni-utils.h`; the
+  seven `_*.py` submodules required at runtime were absent, causing
+  `ModuleNotFoundError` for anyone who installed from the release tarball.
+  All submodules now included; standalone script uploads removed (the archive
+  is the correct delivery artifact).
+- **CI drift job missing `--kotlin-from-header --check` step** — The `drift`
+  job in `ci.yml` checked that `ImageClassifier_jni.gen.cpp` was up to date
+  with `ImageClassifier.kt`, but did not verify that `ImageClassifier.kt` was
+  up to date with `image_classifier.h`. Added a dedicated "Check android-binding
+  Kotlin stubs" step that runs `--kotlin-from-header --check` before the forward-
+  pass check.
+- **Pre-commit `files:` patterns missing `_kotlin_gen.py`** — Changes to the
+  reverse generator did not trigger tests or drift hooks. Updated all five hook
+  patterns to include `_kotlin_gen`.
+- **Added `jni-generator-drift-android-kt` pre-commit hook** — Detects drift
+  between `image_classifier.h` and the generated `ImageClassifier.kt` at commit
+  time (reverse-direction counterpart to the existing forward-pass hook).
+- **`android-binding` was not bootstrappable** — Added `settings.gradle.kts`,
+  `gradle/wrapper/gradle-wrapper.properties`, `gradlew`, and `gradlew.bat` so
+  `./gradlew generateAll` works without a pre-installed Gradle.
+- **`kmp-binding/shared/src/jvmMain` was an empty directory** — Added
+  `NativeBridge.jvm.kt` with a comment explaining the source set's purpose.
+
+### Changed
+- **README "Try It" block** — Added `--kotlin-from-header` example; updated
+  KMP Gradle snippet to show the convention plugin DSL (raw `Exec` task kept as
+  a secondary option).
+- **`.gitignore`** — Added Gradle/Android build artifact entries: `.gradle/`,
+  `**/build/`, `gradle-wrapper.jar`, `local.properties`, `.kotlin/`,
+  `compose-desktop.pro`.
+- **`gradle-integration/README.md`** — Removed stale "not executed offline"
+  caveat; replaced with a pointer to `examples/kmp-binding/` as the living
+  reference.
+- **`CONTRIBUTING.md`** — Expanded drift-check step to list all five checks
+  (three forward-pass + one reverse-pass + sample-binding), matching the
+  pre-commit hooks exactly.
+
+---
+
 ## [1.5.2] — 2026-06-26
 
 ### Added
