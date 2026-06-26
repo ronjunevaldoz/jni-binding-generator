@@ -1,5 +1,50 @@
 # Advanced usage
 
+## Reverse mode: C header → Kotlin stubs (`--kotlin-from-header`)
+
+If you already have a native C library and want to scaffold the Kotlin `external fun`
+declarations without writing them by hand, pass the header file directly:
+
+```bash
+python3 scripts/jni-binding-generator.py \
+    --kotlin-from-header include/engine.h \
+    --output app/src/main/kotlin/com/example/generated \
+    --kotlin-package com.example.native
+```
+
+This parses `engine.h` and writes `Engine.kt` (object name derived from the
+filename stem) containing one `external fun` per C function declaration.
+
+**Type mapping defaults:**
+- `void*` → `Long` (opaque native handle convention)
+- `const char*` → `String`
+- Pointer-array params (`float*`, `int32_t*`, …) → `FloatArray`, `IntArray`, …
+- Returned pointers → `Long` (a returned pointer is treated as a handle, not an array)
+- Scalar types (`int`, `int32_t`, `float`, `double`, `bool`, `int64_t`) map naturally
+- Unknown struct/typedef pointers → `Long /* TODO: TypeName */` — mark the spots to fill in
+
+**`--kotlin-package PKG`** sets the `package` declaration. Omitting it inserts a
+`/* TODO: set your package */` placeholder.
+
+**`--dry-run`** prints the generated file without writing it.
+
+**`--check`** exits with code 3 if the output file is missing or out of date — suitable
+for pre-commit / CI:
+
+```bash
+python3 scripts/jni-binding-generator.py \
+    --kotlin-from-header include/engine.h \
+    --output app/src/main/kotlin/com/example/generated \
+    --kotlin-package com.example.native \
+    --check
+```
+
+The reverse mode is intentionally a scaffold — review every signature before use,
+especially `TODO`-annotated types, and load the native library once in the companion
+object (a `System.loadLibrary(…)` reminder is included in the generated header comment).
+
+---
+
 ## iOS / Kotlin Multiplatform cinterop (`--ios-cinterop`)
 
 JNI is an Android/JVM concern. iOS targets in a KMP project use Kotlin/Native

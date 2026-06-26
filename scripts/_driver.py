@@ -158,13 +158,24 @@ def parse_args(argv=None):
     )
     parser.add_argument(
         "--kotlin-source",
-        required=True,
-        help="Path to a Kotlin file or source directory (scanned recursively)",
+        help="Path to a Kotlin file or source directory (scanned recursively). "
+        "Required unless --kotlin-from-header is used.",
     )
     parser.add_argument(
         "--output",
         required=True,
-        help="Output directory for generated C++ files",
+        help="Output directory for generated files",
+    )
+    parser.add_argument(
+        "--kotlin-from-header",
+        metavar="FILE",
+        help="Parse a C/C++ header and emit Kotlin external fun declarations (reverse mode)",
+    )
+    parser.add_argument(
+        "--kotlin-package",
+        metavar="PKG",
+        default="",
+        help="Package name for the generated Kotlin file (used with --kotlin-from-header)",
     )
     parser.add_argument(
         "--dry-run",
@@ -212,8 +223,69 @@ def parse_args(argv=None):
     return parser.parse_args(argv)
 
 
+def _main_kotlin_from_header(args) -> int:
+    """Handle the --kotlin-from-header reverse-generation mode."""
+    from _kotlin_gen import _header_to_object_name, generate_kotlin_stubs
+
+    header_path = Path(args.kotlin_from_header)
+    if not header_path.exists():
+        print(f"Error: --kotlin-from-header file not found: {header_path}", file=sys.stderr)
+        return EXIT_USAGE
+
+    obj_name = _header_to_object_name(header_path)
+    source = header_path.read_text(encoding="utf-8")
+    content = generate_kotlin_stubs(
+        source=source,
+        source_name=header_path.name,
+        package=args.kotlin_package,
+        object_name=obj_name,
+    )
+    if not content:
+        print(f"No function declarations found in {header_path}", file=sys.stderr)
+        return EXIT_USAGE
+
+    output_dir = Path(args.output)
+    out_path = output_dir / f"{obj_name}.kt"
+    existing = out_path.read_text(encoding="utf-8") if out_path.exists() else None
+
+    if args.dry_run:
+        print(f"{header_path}  ->  {out_path}  [dry-run]")
+        print(content)
+        return EXIT_OK
+
+    if args.check:
+        up_to_date = existing == content
+        status = "ok" if up_to_date else ("missing" if existing is None else "DRIFT")
+        print(f"[check] {out_path}: {status}")
+        if not up_to_date:
+            print("\n1 generated file(s) are out of date.", file=sys.stderr)
+            return EXIT_DRIFT
+        print("\nAll 1 generated file(s) are up to date.")
+        return EXIT_OK
+
+    if existing == content:
+        print(f"{header_path}  ->  {out_path}  (unchanged)")
+    else:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(content, encoding="utf-8")
+        action = "written" if existing is None else "updated"
+        print(f"{header_path}  ->  {out_path}  [{action}]")
+
+    return EXIT_OK
+
+
 def main(argv=None) -> int:
     args = parse_args(argv)
+
+    # Reverse mode: C header → Kotlin stubs
+    if args.kotlin_from_header:
+        return _main_kotlin_from_header(args)
+
+    # Forward mode: Kotlin → C++ JNI stubs
+    if not args.kotlin_source:
+        print("Error: --kotlin-source is required (or use --kotlin-from-header)", file=sys.stderr)
+        return EXIT_USAGE
+
     if args.type_map:
         type_map_path = Path(args.type_map)
         if not type_map_path.exists():

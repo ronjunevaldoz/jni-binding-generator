@@ -35,6 +35,13 @@ from _generator import generate_test_file as generate_test_file
 from _generator import output_basename as output_basename
 from _generator import test_output_basename as test_output_basename
 from _ios import generate_ios_cinterop_files as generate_ios_cinterop_files
+from _kotlin_gen import KotlinFun as KotlinFun
+from _kotlin_gen import KotlinParam as KotlinParam
+from _kotlin_gen import _header_to_object_name as _header_to_object_name
+from _kotlin_gen import generate_kotlin_from_header as generate_kotlin_from_header
+from _kotlin_gen import generate_kotlin_stubs as generate_kotlin_stubs
+from _kotlin_gen import parse_c_header as parse_c_header
+from _kotlin_gen import parse_c_header_file as parse_c_header_file
 from _models import EXIT_DRIFT as EXIT_DRIFT
 from _models import EXIT_OK as EXIT_OK
 from _models import EXIT_PARSE as EXIT_PARSE

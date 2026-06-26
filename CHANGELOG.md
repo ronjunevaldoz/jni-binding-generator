@@ -9,6 +9,36 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.5.1] — 2026-06-26
+
+### Added
+- **`--kotlin-from-header FILE`** — reverse-generation mode that parses a C/C++
+  header and emits a Kotlin `object { external fun … }` stub file ready for JNI
+  wiring.
+  - `--kotlin-package PKG` sets the package declaration in the generated file.
+  - Supports `--dry-run` (print without writing) and `--check` (exit 3 on drift),
+    consistent with the forward-generation flags.
+  - Generates a companion `.kt` named after the header stem (e.g. `engine.h` →
+    `Engine.kt`).
+- **`scripts/_kotlin_gen.py`** — new module implementing the C→Kotlin reverse
+  generator:
+  - `_C_PARAM_MAP` / `_C_RETURN_MAP` — parameter and return type tables;
+    pointer-array params map to `*Array` types while returned pointers map to
+    `Long` (opaque handle convention).
+  - `_strip_c_source()` — removes comments, preprocessor lines, struct/union/enum
+    blocks, typedefs, `extern "C"` wrappers, `__attribute__`, and `__declspec`.
+  - `parse_c_header(source)` / `parse_c_header_file(path)` — parse C function
+    declarations, deduplicate by name, skip type keywords and C++ operators.
+  - `generate_kotlin_stubs(source, …)` / `generate_kotlin_from_header(path, …)` —
+    produce the full `.kt` file content.
+  - `_header_to_object_name(path)` — derives the Kotlin object name from the
+    header filename (`my_engine.h` → `MyEngine`).
+- **55 new tests** in `scripts/tests/test_kotlin_gen.py` covering type mapping,
+  name conversion, source stripping, parser edge cases, full stub generation,
+  and CLI integration (207 tests total, up from 152).
+
+---
+
 ## [1.5.0] — 2026-06-26
 
 ### Changed

@@ -1,7 +1,7 @@
 # Unit testing guide
 
 All tests live under `scripts/tests/` and run with Python's built-in `unittest`
-(152 tests across 5 suites). No extra dependencies are required beyond a JDK
+(207 tests across 6 suites). No extra dependencies are required beyond a JDK
 (for the compilation test).
 
 ## Running the tests
@@ -112,6 +112,21 @@ acquisition is paired with a matching release. No runtime JVM required.
 
 Helpers using `Get*ArrayRegion` (primitive arrays copied into a C buffer, no local ref
 created) are correctly excluded from the `DeleteLocalRef` coverage check.
+
+### `test_kotlin_gen.py` — C header → Kotlin reverse generator
+
+Tests `parse_c_header()`, `generate_kotlin_stubs()`, `generate_kotlin_from_header()`,
+and the `--kotlin-from-header` CLI flag.
+
+| Class | What it covers |
+|---|---|
+| `TestReturnTypeMapping` | `void`→`Unit`, `int32_t`→`Int`, `void*`→`Long`, `const char*`→`String`; returned pointer arrays are `Long` handles (not `FloatArray`/`IntArray`); `bool`, `float`, `double`, `int64_t` scalar returns; unknown struct pointer gets `Long /* TODO */` |
+| `TestParamTypeMapping` | `void*`→`Long`, `const char*`→`String`, `int32_t`→`Int`; `float*`→`FloatArray`, `uint8_t*`→`ByteArray`; `bool`→`Boolean`; unknown type→`Long /* TODO */`; `(void)` and `()` produce no params |
+| `TestNameConversion` | Snake→camelCase function names; already-camelCase passed through; single-word names; snake→camel param names; unnamed params get `paramN` placeholders; `_header_to_object_name` for various filename patterns |
+| `TestSourceStripping` | Line comments, block comments, preprocessor (`#pragma once`, `#include`), struct blocks, typedef function pointers, `extern "C" { }` wrappers, `const` qualifier on param types |
+| `TestParserEdgeCases` | Four-function header parsed in order; duplicate names deduplicated; no-function source returns empty list; multi-param parsing; `int32_t *out` (star on name) → `IntArray` |
+| `TestGenerateKotlinStubs` | `package` line present; `object` declaration; all three `external fun` names; `void` return omits `: Unit`; non-void return includes type; empty source returns `""`; missing package gets `TODO`; `System.loadLibrary` hint; file ends with `}` |
+| `TestKotlinFromHeaderCLI` | `--kotlin-from-header` writes the `.kt` file with the correct functions; `--dry-run` prints but does not write; `--check` returns `EXIT_DRIFT` on missing file and `EXIT_OK` when up-to-date; `--kotlin-package` sets the package; missing header → `EXIT_USAGE`; mode works without `--kotlin-source` |
 
 ### `test_integration.py` — compile check
 
