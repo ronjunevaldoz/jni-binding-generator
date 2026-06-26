@@ -9,6 +9,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.7] — 2026-06-26
+
+### Added
+- `TestDryRun` in `test_driver.py` — 3 tests verifying `--dry-run` prints
+  generated code with a `[dry-run]` marker and never writes files.
+- `--dry-run` example added to README CLI section (flag existed but was
+  undocumented in README).
+- `TestDryRun` row added to `docs/unit-testing.md` driver table.
+
+### Changed
+- Test count: 140 → 143
+
+---
+
 ## [1.2.6] — 2026-06-26
 
 ### Added

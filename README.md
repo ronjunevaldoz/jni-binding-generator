@@ -17,7 +17,7 @@ incremental writes, drift detection, and comprehensive docs.
 | Area | Detail |
 |---|---|
 | **Type coverage** | All Kotlin primitives, `String`, all `*Array` variants, `List<T>`, `Set<T>`, `Map<K,V>`, nested collections, enums |
-| **Tests** | 140 unit tests across 5 suites + compile-check integration test against real JDK headers |
+| **Tests** | 143 unit tests across 5 suites + compile-check integration test against real JDK headers |
 | **Docs** | [Type matrix](docs/type-support-matrix.md) · [Memory management](docs/memory-management.md) · [Unit testing](docs/unit-testing.md) · [Advanced usage](docs/advanced-usage.md) |
 | **CI / hooks** | Pre-commit: ruff lint + unit tests + drift check |
 | **Gradle** | Raw `Exec` task or typed `jniGenerator { bindings { ... } }` convention plugin |
@@ -35,6 +35,12 @@ python3 scripts/jni-binding-generator.py \
     --kotlin-source examples/sample-binding/SampleEngine.kt \
     --output examples/sample-binding/generated \
     --generate-tests
+
+# Print generated code to stdout without writing any files
+python3 scripts/jni-binding-generator.py \
+    --kotlin-source examples/sample-binding/SampleEngine.kt \
+    --output examples/sample-binding/generated \
+    --dry-run
 
 # Preview what would change without writing (unified diff)
 python3 scripts/jni-binding-generator.py \

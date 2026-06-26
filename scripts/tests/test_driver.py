@@ -216,6 +216,35 @@ class N {
         self.assertEqual(rc, gen.EXIT_USAGE)
 
 
+class TestDryRun(DriverTestCase):
+    def test_dry_run_does_not_write_files(self):
+        self.run_gen("--dry-run")
+        self.assertFalse((self.out / "SampleEngine_jni.gen.cpp").exists())
+
+    def test_dry_run_prints_generated_code(self):
+        import io
+        from contextlib import redirect_stdout
+
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            rc = self.run_gen("--dry-run")
+        self.assertEqual(rc, gen.EXIT_OK)
+        out = buf.getvalue()
+        self.assertIn("Java_com_example_sample_SampleEngine", out)
+        self.assertIn("[dry-run]", out)
+
+    def test_dry_run_shows_all_functions(self):
+        import io
+        from contextlib import redirect_stdout
+
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            self.run_gen("--dry-run")
+        out = buf.getvalue()
+        self.assertIn("nativeLoad", out)
+        self.assertIn("nativeRelease", out)
+
+
 class TestDiffMode(DriverTestCase):
     def test_diff_no_existing_shows_output(self):
         import io
