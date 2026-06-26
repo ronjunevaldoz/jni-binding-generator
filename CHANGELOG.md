@@ -9,6 +9,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.3] — 2026-06-26
+
+### Fixed
+- **`pip install .` entry point was broken** — `jni_binding_generator:main` requires
+  `scripts/__init__.py` to export `main`, but the file did not exist. The main script
+  is named `jni-binding-generator.py` (hyphen) so it is not directly importable.
+  Added `scripts/__init__.py` that loads the script via `importlib.util` and exposes
+  `main`, with the module registered in `sys.modules` before execution to satisfy
+  Python's dataclass `__module__` resolution.
+
+---
+
 ## [1.4.2] — 2026-06-26
 
 ### Fixed
