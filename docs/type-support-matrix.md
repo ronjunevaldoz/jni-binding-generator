@@ -77,11 +77,15 @@ For return types the generated TODO body includes a comment like:
 
 | Kotlin type               | As param | As return | Notes |
 |---|:---:|:---:|---|
-| Data class / POJO         | ❌ | ❌ | Requires per-field reflection; out of scope |
-| `Enum` (any named enum)   | ✅ | ✅ | Any capitalized Kotlin type is auto-detected as an enum. Param → `int32_t` via `enum_ordinal(env, obj)`. Return → `jint` ordinal; convert back with `MyEnum.values()[result]` on Kotlin side. |
-| `Set<T>`                  | ❌ | ❌ | No planned timeline |
-| `Array<T>` (non-String)   | ❌ | ❌ | Use `TArray` typed arrays instead |
-| Nested `List<List<T>>`    | ❌ | ❌ | No planned timeline |
+| Data class / POJO         | ❌ | ❌ | Requires per-field reflection; intentionally out of scope |
+| `Enum` (any named enum)   | ✅ | ✅ | Auto-detected: any `^[A-Z][A-Za-z0-9_]*$` type → `int32_t` ordinal via `enum_ordinal(env, obj)` |
+| `Set<String>`             | ✅ | ✅ | `std::unordered_set<std::string>` via `extract_set_string` / `make_set_string` |
+| `Set<Int>`                | ✅ | ✅ | `std::unordered_set<int32_t>` via `extract_set_int` / `make_set_int` |
+| `Array<Int>`              | ✅ | ✅ | `jobjectArray` → `std::vector<int32_t>` via `extract_boxed_int_array` |
+| `Array<Long>`             | ✅ | ✅ | `jobjectArray` → `std::vector<int64_t>` via `extract_boxed_long_array` |
+| `Array<Float>`            | ✅ | ✅ | `jobjectArray` → `std::vector<float>` via `extract_boxed_float_array` |
+| `Array<Double>`           | ✅ | ✅ | `jobjectArray` → `std::vector<double>` via `extract_boxed_double_array` |
+| `List<List<String>>`      | ✅ | ✅ | Nested list via `extract_list_list_string` / `make_list_list_string` |
 
 ## Nullable parameters (`T?`)
 
