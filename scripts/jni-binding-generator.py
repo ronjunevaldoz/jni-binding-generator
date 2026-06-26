@@ -115,6 +115,15 @@ def _is_nullable(kotlin_type: str) -> bool:
     return kotlin_type.strip().endswith("?")
 
 
+def _needs_exception_check(info: TypeInfo) -> bool:
+    """True for TypeInfos whose conversion calls a JNI API that can pend an exception.
+
+    Strings call GetStringUTFChars; arrays call Get*ArrayRegion / GetObjectArrayElement.
+    Primitive casts are pure C and never pend exceptions.
+    """
+    return info.is_string or info.cpp_type.startswith("std::vector")
+
+
 def map_param_type(kotlin_type: str) -> TypeInfo:
     base = kotlin_type.rstrip("?").strip()
     if base in TYPE_MAP:
@@ -326,6 +335,10 @@ def generate_function(parsed: ParsedFile, func: ExternalFunction) -> str:
         var = _cpp_var_name(p, info)
         expr = info.convert.format(env="env", var=p.name)
         lines.append(f"    {info.cpp_type} {var} = {expr};")
+        # GEN-1: emit ExceptionCheck after JNI calls that can pend an exception
+        # (string and array conversions). Pure C casts need no check.
+        if _needs_exception_check(info):
+            lines.append(f"    if (env->ExceptionCheck()) {ret_stmt}")
         marshalled.append((p, info, var))
 
     # Error handling. Nullable parameters (e.g. `String?`, `Long?`) are allowed

@@ -53,7 +53,15 @@ inline std::string jstring2string(JNIEnv* env, jstring jstr) {
     if (chars == nullptr) {
         return {};  // OutOfMemoryError already pending
     }
-    std::string result(chars);
+    // EP-6a fix: release before any heap allocation that could throw std::bad_alloc,
+    // so the pinned chars are freed on every path including exceptions.
+    std::string result;
+    try {
+        result = chars;
+    } catch (...) {
+        env->ReleaseStringUTFChars(jstr, chars);
+        throw;
+    }
     env->ReleaseStringUTFChars(jstr, chars);
     return result;
 }
@@ -127,8 +135,11 @@ inline std::vector<std::string> extract_string_array(JNIEnv* env, jobjectArray a
     out.reserve(static_cast<size_t>(len));
     for (jsize i = 0; i < len; ++i) {
         jstring element = static_cast<jstring>(env->GetObjectArrayElement(arr, i));
-        out.push_back(jstring2string(env, element));
+        // EP-6b fix: convert before push_back so DeleteLocalRef runs even if
+        // push_back throws std::bad_alloc.
+        std::string str = jstring2string(env, element);
         env->DeleteLocalRef(element);
+        out.push_back(std::move(str));
     }
     return out;
 }

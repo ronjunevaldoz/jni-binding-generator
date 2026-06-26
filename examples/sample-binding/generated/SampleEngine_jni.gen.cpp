@@ -20,6 +20,7 @@ Java_com_example_sample_SampleEngine_nativeLoad(
         jint threads) {
     // --- Marshalling ---
     std::string modelPath_val = jstring2string(env, modelPath);
+    if (env->ExceptionCheck()) return 0;
     int32_t threads_val = static_cast<int32_t>(threads);
 
     // --- Error handling ---
@@ -45,6 +46,7 @@ Java_com_example_sample_SampleEngine_nativeProcess(
     // --- Marshalling ---
     void* handle_ptr = reinterpret_cast<void*>(handle);
     std::string input_val = jstring2string(env, input);
+    if (env->ExceptionCheck()) return nullptr;
     int32_t timeout_val = static_cast<int32_t>(timeout);
     float temperature_val = static_cast<float>(temperature);
 
@@ -74,6 +76,7 @@ Java_com_example_sample_SampleEngine_nativeTokenizeBatch(
     // --- Marshalling ---
     void* handle_ptr = reinterpret_cast<void*>(handle);
     std::vector<std::string> prompts_val = extract_string_array(env, prompts);
+    if (env->ExceptionCheck()) return nullptr;
     bool addBos_val = (addBos == JNI_TRUE);
 
     // --- Error handling ---
