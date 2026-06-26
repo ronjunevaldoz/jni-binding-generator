@@ -33,9 +33,19 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME}"
           ARCHIVE="jni-binding-generator-${VERSION}.tar.gz"
+          # Include the entry point, all submodules, the C++ header helpers,
+          # and the project metadata.  The submodules (_driver, _generator, …)
+          # are required at runtime — omitting them breaks the CLI.
           tar -czf "$ARCHIVE" \
             scripts/jni-binding-generator.py \
             scripts/__init__.py \
+            scripts/_driver.py \
+            scripts/_generator.py \
+            scripts/_ios.py \
+            scripts/_kotlin_gen.py \
+            scripts/_models.py \
+            scripts/_parser.py \
+            scripts/_types.py \
             scripts/jni-utils.h \
             pyproject.toml \
             README.md \
@@ -64,6 +74,4 @@ jobs:
           body: ${{ steps.notes.outputs.notes }}
           files: |
             ${{ env.ARCHIVE }}
-            scripts/jni-binding-generator.py
-            scripts/__init__.py
             scripts/jni-utils.h

@@ -89,7 +89,15 @@ jobs:
             --output examples/kmp-binding/desktopApp/src/jvmMain/cpp/generated \
             --check
 
-      - name: Check android-binding
+      - name: Check android-binding Kotlin stubs (--kotlin-from-header)
+        run: |
+          python3 scripts/jni-binding-generator.py \
+            --kotlin-from-header examples/android-binding/include/image_classifier.h \
+            --output examples/android-binding/src \
+            --kotlin-package com.example.android.classifier \
+            --check
+
+      - name: Check android-binding JNI stubs (forward pass)
         run: |
           python3 scripts/jni-binding-generator.py \
             --kotlin-source examples/android-binding/src/ImageClassifier.kt \
