@@ -128,8 +128,7 @@ See [`examples/android-binding/`](examples/android-binding/) for an Android-only
 - **KMP-aware** — Works with `androidMain` and `desktopMain` source sets; `--ios-cinterop` generates `.def` skeletons
 - **pip-installable** — `pip install .` adds a `jni-binding-generator` CLI command
 - **Optional Gradle integration** — One-line task to regenerate when Kotlin interfaces change
-- **Claude agent skill** — Interactive refinement via `/jni-binding-generator` agent
-- **Generic template** — Works with any Kotlin/JNI project (not tied to a specific organization or library)
+- **Generic** — Works with any Kotlin/JNI project (not tied to a specific organization or library)
 
 ## Use Cases
 
@@ -228,27 +227,8 @@ jni-binding-generator/
 
 ## Credits & Attribution
 
-This project is inspired by **[awake-vulkan-generator](https://github.com/ronjunevaldoz/awake/tree/vulkan/awake-vulkan-generator)** — a working code generator that automatically converts Kotlin/JVM bindings to C++ JNI boilerplate for the Vulkan graphics library.
-
-**Key insight:** The awake-vulkan-generator proved that this approach works in production. It solved the exact problem we're generalizing here — eliminating 200+ lines of hand-written JNI marshalling code across multiple native bindings.
-
-### How This Project Came Together
-
-This project was created with **AI assistance (Claude)** to:
-1. Analyze the patterns in awake-vulkan-generator
-2. Generalize the approach for any JNI binding
-3. Plan a reusable, open-source tool
-4. Document the architecture and decision framework
-
-**Why it matters:** Building a generator manually takes weeks of trial-and-error. With AI, we went from a working reference implementation to a generic, well-documented plan in days — proving that AI can accelerate developer tools creation.
-
-## Contact & Feedback
-
-This project is a template ready for evaluation.  
-Share feedback or questions in issues (when repo is live).
+Inspired by **[awake-vulkan-generator](https://github.com/ronjunevaldoz/awake/tree/vulkan/awake-vulkan-generator)** — a production JNI generator for Vulkan bindings that proved the approach works and provided the reference patterns for this project.
 
 ---
 
-**Owner:** Ron Valdoz  
-**Reference:** [awake-vulkan-generator](https://github.com/ronjunevaldoz/awake/tree/vulkan/awake-vulkan-generator)  
-**License:** Apache 2.0
+**License:** Apache 2.0 · **Author:** Ron Valdoz

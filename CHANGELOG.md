@@ -9,6 +9,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.2] — 2026-06-26
+
+### Fixed
+- `pyproject.toml`: removed dead `[tool.ruff]` / `[tool.ruff.lint]` sections that
+  were shadowed by `ruff.toml` (which takes precedence). The two configs had
+  diverged: `pyproject.toml` selected `["E","F","W","I"]` while `ruff.toml`
+  selected `["E","F","I","UP","B"]`. Now there is a single source of truth.
+- `README.md`: removed stale "Claude agent skill" bullet, pre-launch "template
+  ready for evaluation / when repo is live" footer, and internal development
+  narrative. Credits & Attribution section condensed to a concise paragraph.
+
+---
+
 ## [1.3.1] — 2026-06-26
 
 ### Fixed
