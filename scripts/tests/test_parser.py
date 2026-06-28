@@ -178,6 +178,20 @@ class TestTopLevelFun(unittest.TestCase):
         parsed = gen.parse_kotlin_source("package a\nexternal fun foo(x: Int): Long")
         self.assertEqual(parsed.class_name, "Native")
 
+    def test_top_level_and_class_functions_split(self):
+        results = gen.parse_kotlin_source_multi(
+            "package com.example\n"
+            "class Engine { external fun member(): Int }\n"
+            "external fun top(): Int\n",
+            filename="Mixed.kt",
+        )
+        by_class = {r.class_name: r for r in results}
+        self.assertEqual(set(by_class), {"Engine", "MixedKt"})
+        self.assertFalse(by_class["Engine"].is_static)
+        self.assertTrue(by_class["MixedKt"].is_static)
+        self.assertEqual([f.name for f in by_class["Engine"].functions], ["member"])
+        self.assertEqual([f.name for f in by_class["MixedKt"].functions], ["top"])
+
 
 class TestMultiClass(unittest.TestCase):
     _SOURCE = """

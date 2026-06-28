@@ -92,6 +92,13 @@ def _strip_comments(source: str) -> str:
     return source
 
 
+def package_name_from_source(source: str) -> str:
+    """Return the Kotlin package declaration without validating the whole file."""
+    source = _strip_comments(source)
+    pkg_match = _PACKAGE_RE.search(source)
+    return pkg_match.group(1) if pkg_match else ""
+
+
 def parse_kotlin_source(source: str, filename: str = "") -> ParsedFile:
     """Parse a single Kotlin source string into a ParsedFile."""
     source = _strip_comments(source)
@@ -199,6 +206,15 @@ def _find_top_level_class_ranges(stripped: str) -> list[tuple[int, int]]:
     return ranges
 
 
+def _remove_ranges_preserving_lines(source: str, ranges: list[tuple[int, int]]) -> str:
+    chars = list(source)
+    for start, end in ranges:
+        for idx in range(start, min(end, len(chars))):
+            if chars[idx] != "\n":
+                chars[idx] = " "
+    return "".join(chars)
+
+
 def parse_kotlin_source_multi(source: str, filename: str = "") -> list[ParsedFile]:
     """Parse a Kotlin source file that may contain multiple top-level classes.
 
@@ -209,8 +225,7 @@ def parse_kotlin_source_multi(source: str, filename: str = "") -> list[ParsedFil
     stripped = _strip_comments(source)
     ranges = _find_top_level_class_ranges(stripped)
 
-    if len(ranges) <= 1:
-        # Single class or top-level funs — fast path.
+    if not ranges:
         return [parse_kotlin_source(source, filename)]
 
     pkg_match = _PACKAGE_RE.search(stripped)
@@ -220,6 +235,15 @@ def parse_kotlin_source_multi(source: str, filename: str = "") -> list[ParsedFil
     for start, end in ranges:
         segment = pkg_prefix + stripped[start:end]
         parsed = parse_kotlin_source(segment, filename)
+        if parsed.functions:
+            line_delta = stripped.count("\n", 0, start) - pkg_prefix.count("\n")
+            for fn in parsed.functions:
+                fn.line += line_delta
+            results.append(parsed)
+
+    top_level_source = _remove_ranges_preserving_lines(stripped, ranges)
+    if _EXTERNAL_FUN_RE.search(top_level_source):
+        parsed = parse_kotlin_source(top_level_source, filename)
         if parsed.functions:
             results.append(parsed)
 

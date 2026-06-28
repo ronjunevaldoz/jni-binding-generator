@@ -44,8 +44,14 @@ class TestReturnTypeMapping(unittest.TestCase):
     def test_void_ptr_returns_long(self):
         self.assertEqual(self._ret("void* engine_create(int32_t n);"), "Long")
 
+    def test_space_before_pointer_return_name(self):
+        self.assertEqual(self._ret("void *engine_create(int32_t n);"), "Long")
+
     def test_char_ptr_returns_string(self):
         self.assertEqual(self._ret("const char* engine_version(void);"), "String")
+
+    def test_char_pointer_return_name_with_space(self):
+        self.assertEqual(self._ret("const char *engine_version(void);"), "String")
 
     def test_float_ptr_return_is_long_handle(self):
         # Returned pointer is an opaque handle, not FloatArray

@@ -32,7 +32,7 @@ ruff format --check scripts/
 1. Fork the repo and create a feature branch
 2. Make your changes — keep them focused; one concern per PR
 3. Add or update tests (`scripts/tests/`) to cover the change
-4. Run the full suite and confirm all 207 tests pass
+4. Run the full suite and confirm all 220 tests pass
 5. Run `ruff check scripts/` — no lint errors
 6. Re-run all drift checks to confirm generated files are up to date:
    ```bash

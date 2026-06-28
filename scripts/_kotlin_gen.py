@@ -154,7 +154,7 @@ class KotlinFun:
 _C_FUNC_RE = re.compile(
     r"^[ \t]*"
     r"([\w \t*]+?)"  # return type (no newlines, non-greedy)
-    r"\s+(\w+)\s*"  # function name (separated by whitespace)
+    r"\s+(\*+)?\s*(\w+)\s*"  # optional return pointer attached to function name
     r"\(([^)]*)\)\s*;",  # param list + semicolon
     re.MULTILINE,
 )
@@ -224,9 +224,9 @@ def parse_c_header(source: str) -> list[KotlinFun]:
     seen: set[str] = set()
 
     for m in _C_FUNC_RE.finditer(stripped):
-        raw_ret = m.group(1).strip()
-        c_name = m.group(2).strip()
-        raw_params = m.group(3).strip()
+        raw_ret = (m.group(1).strip() + (m.group(2) or "")).strip()
+        c_name = m.group(3).strip()
+        raw_params = m.group(4).strip()
 
         # Skip type keywords, operators, destructors, and duplicate names
         if c_name.lower() in _TYPE_ONLY:

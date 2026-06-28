@@ -7,7 +7,7 @@ from pathlib import Path
 from _generator import generate_file, generate_test_file, output_basename, test_output_basename
 from _ios import generate_ios_cinterop_files
 from _models import EXIT_DRIFT, EXIT_OK, EXIT_PARSE, EXIT_USAGE, ParsedFile
-from _parser import parse_kotlin_file
+from _parser import package_name_from_source, parse_kotlin_file
 from _types import UnknownTypeError, load_type_map
 
 
@@ -37,13 +37,15 @@ def run(
     # it contains more than one top-level class/object.
     parsed_files: list[tuple[Path, ParsedFile]] = []
     for kt in files:
+        if package_filter:
+            package = package_name_from_source(kt.read_text(encoding="utf-8"))
+            if not package.startswith(package_filter):
+                if verbose:
+                    print(f"[skip] {kt} (package {package!r} filtered)")
+                continue
         try:
             for parsed in parse_kotlin_file(kt):
                 if not parsed.functions:
-                    continue
-                if package_filter and not parsed.package.startswith(package_filter):
-                    if verbose:
-                        print(f"[skip] {kt} (package {parsed.package!r} filtered)")
                     continue
                 parsed_files.append((kt, parsed))
         except ValueError as exc:

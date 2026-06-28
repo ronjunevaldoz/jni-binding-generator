@@ -378,6 +378,29 @@ class TestPackageFilter(DriverTestCase):
         self.assertTrue(any("A_jni" in n or "A" in n for n in names), names)
         self.assertFalse(any("B" in n for n in names), names)
 
+    def test_filter_skips_unsupported_constructs_in_other_packages(self):
+        (self.src / "Good.kt").write_text(
+            "package com.example.good\nclass Good { external fun ok(x: Int): Long }",
+            encoding="utf-8",
+        )
+        (self.src / "Bad.kt").write_text(
+            "package com.example.bad\nclass Bad { suspend external fun nope(): Int }",
+            encoding="utf-8",
+        )
+        rc = gen.main(
+            [
+                "--kotlin-source",
+                str(self.src),
+                "--output",
+                str(self.out),
+                "--package-filter",
+                "com.example.good",
+            ]
+        )
+        self.assertEqual(rc, gen.EXIT_OK)
+        names = [p.name for p in self.out.glob("*.gen.cpp")]
+        self.assertEqual(names, ["Good_jni.gen.cpp"])
+
     def test_no_filter_includes_all(self):
         self._write_two_packages()
         rc = gen.main(["--kotlin-source", str(self.src), "--output", str(self.out)])

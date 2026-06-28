@@ -9,6 +9,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.6.5] — 2026-06-28
+
+### Fixed
+- **Mixed Kotlin source parsing** — class-scoped and top-level `external fun`
+  declarations in the same `.kt` file now generate separate JNI classes instead of
+  binding file-level functions to the first class.
+- **`--package-filter` pre-filtering** — files outside the selected package prefix
+  are skipped before full signature validation, so unsupported constructs in
+  unrelated packages no longer fail filtered generation.
+- **C pointer-return declarations** — reverse generation now accepts common C
+  spelling such as `void *create(void);` and `const char *version(void);`.
+- **Docs** — refreshed the documented test count to 220.
+
+---
+
 ## [1.6.4] — 2026-06-26
 
 ### Docs
